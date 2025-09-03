@@ -1,65 +1,96 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, Menu } from "electron";
 import * as path from "path";
-import { isDev } from "./util";
 
-const createWindow = (): void => {
-  // Create the browser window
-  const mainWindow = new BrowserWindow({
+const isDev = !app.isPackaged;
+
+let mainWindow: BrowserWindow | null = null;
+
+function createWindow(): void {
+  mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     minWidth: 800,
     minHeight: 600,
+    fullscreen: true,
     webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
       nodeIntegration: false,
       contextIsolation: true,
+      preload: path.join(__dirname, "preload.js"),
     },
-    icon: path.join(__dirname, "../public/vite.svg"), // Optional: Add app icon
-    show: false, // Don't show until ready-to-show
+    titleBarStyle: "default",
+    show: false,
+    autoHideMenuBar: !isDev,
   });
 
   // Load the app
   if (isDev) {
-    mainWindow.loadURL("http://localhost:5173");
-    mainWindow.webContents.openDevTools();
+    mainWindow.loadURL("http://localhost:5173").catch((err) => {
+      console.error("Failed to load development server:", err);
+    });
+    // mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
+    mainWindow
+      .loadFile(path.join(__dirname, "../dist/index.html"))
+      .catch((err) => {
+        console.error("Failed to load production file:", err);
+      });
   }
 
-  // Show window when ready to prevent visual flash
   mainWindow.once("ready-to-show", () => {
-    mainWindow.show();
+    if (mainWindow) {
+      mainWindow.show();
+    }
   });
-};
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows
+  mainWindow.on("closed", () => {
+    mainWindow = null;
+  });
+}
+
+// Create menu template
+const menuTemplate: Electron.MenuItemConstructorOptions[] = [];
+
+// This method will be called when Electron has finished initialization
 app.whenReady().then(() => {
   createWindow();
 
-  app.on("activate", () => {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
-  });
+  // Set menu
+  const menu = Menu.buildFromTemplate(menuTemplate);
+  Menu.setApplicationMenu(menu);
 });
 
-// Quit when all windows are closed, except on macOS
+// Quit when all windows are closed
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();
   }
 });
 
-// Security: Prevent navigation to external websites
-app.on("web-contents-created", (_, contents) => {
+app.on("activate", () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
+});
+
+// Security: Prevent new window creation
+app.on("web-contents-created", (event, contents) => {
+  contents.setWindowOpenHandler(({ url }) => {
+    console.log("Blocked new window creation for URL:", url);
+    return { action: "deny" };
+  });
+});
+
+// Security: Prevent navigation to external URLs
+app.on("web-contents-created", (event, contents) => {
   contents.on("will-navigate", (event, navigationUrl) => {
     const parsedUrl = new URL(navigationUrl);
 
-    if (parsedUrl.origin !== "http://localhost:5173") {
+    if (
+      parsedUrl.origin !== "http://localhost:5173" &&
+      parsedUrl.origin !== "file://"
+    ) {
       event.preventDefault();
+      console.log("Blocked navigation to:", navigationUrl);
     }
   });
 });

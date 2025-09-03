@@ -1,45 +1,62 @@
 {
-  "name": "gcs-tejas",
-  "private": true,
-  "version": "0.0.1",
-  "description": "Electron Vite React TypeScript with Tailwind",
-  "author": "Your Name",
-  "license": "MIT",
+  "name": "cansat-gui",
+  "version": "1.0.0",
+  "description": "CanSat Competition GUI Application",
   "main": "dist-electron/main.js",
+  "private": true,
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "dev": "concurrently \"bun run dev:vite\" \"bun run dev:electron\"",
+    "dev:vite": "cross-env NODE_ENV=development vite",
+    "dev:electron": "cross-env NODE_ENV=development wait-on http://localhost:5173 && bun run compile:electron && electron dist-electron/main.js",
+    "compile:electron": "tsc -p tsconfig.electron.json",
+    "build": "vite build && bun run compile:electron",
+    "build:electron": "bun run build && electron-builder",
     "preview": "vite preview",
-    "electron:build": "electron-builder",
-    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
-    "dist": "npm run build && electron-builder --publish=never"
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "build": {
+    "appId": "com.cansat.gui",
+    "productName": "CanSat GUI",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage"
+    },
+    "mac": {
+      "target": "dmg"
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "@types/react": "^18.2.79",
+    "@types/react-dom": "^18.2.25",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.19",
+    "concurrently": "^8.2.2",
+    "cross-env": "^10.0.0",
+    "electron": "^30.0.0",
+    "electron-builder": "^24.13.3",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.10",
+    "wait-on": "^7.2.0"
   },
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
-  "devDependencies": {
-    "@eslint/js": "^9.26.0",
-    "@types/node": "^18.17.5",
-    "@types/react": "^18.2.21",
-    "@types/react-dom": "^18.2.7",
-    "@typescript-eslint/eslint-plugin": "^6.6.0",
-    "@typescript-eslint/parser": "^6.6.0",
-    "@vitejs/plugin-react": "^4.0.4",
-    "autoprefixer": "^10.4.15",
-    "concurrently": "^8.2.2",
-    "electron": "^26.1.0",
-    "electron-builder": "^24.6.4",
-    "eslint": "^8.48.0",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-react-refresh": "^0.4.3",
-    "postcss": "^8.4.29",
-    "tailwindcss": "^3.3.3",
-    "typescript": "^5.2.2",
-    "vite": "^4.4.9",
-    "vite-plugin-electron": "^0.14.0",
-    "vite-plugin-electron-renderer": "^0.14.5",
-    "wait-on": "^7.0.1"
-  }
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }

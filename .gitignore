@@ -1,25 +1,24 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+dist-electron/
+build/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
 # Logs
-logs
-*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
-node_modules
-dist
-dist-electron
-dist-ssr
-*.local
-
-# Electron
-*.exe
-*.dmg
-*.pkg
-*.deb
-*.tar.gz
-*.zip
 
 # Editor directories and files
 .vscode/*
@@ -32,5 +31,9 @@ dist-ssr
 *.sln
 *.sw?
 
-# OS
+# OS generated files
 Thumbs.db
+.DS_Store
+
+# Electron
+release/
