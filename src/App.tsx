@@ -3,6 +3,8 @@ import { useEffect } from "react";
 import Header from "./components/header";
 import "./index.css";
 import LeftPanel from "./components/left-panel";
+import { XBeeProvider } from "./contexts/xbee-provider";
+import SimpleXBeeDashboard from "./components/simple-xbee-dashboard";
 
 const App = () => {
   useEffect(() => {
@@ -21,14 +23,17 @@ const App = () => {
   }, []);
 
   return (
-    <BrowserRouter>
-      <div className="h-screen w-screen overflow-hidden font-roboto-mono antialiased">
-        <Header />
-        <main className="h-full flex">
-          <LeftPanel />
-        </main>
-      </div>
-    </BrowserRouter>
+    <XBeeProvider>
+      <BrowserRouter>
+        <div className="h-screen w-screen overflow-hidden font-roboto-mono antialiased">
+          <Header />
+          <main className="h-full flex">
+            <LeftPanel />
+            <SimpleXBeeDashboard />
+          </main>
+        </div>
+      </BrowserRouter>
+    </XBeeProvider>
   );
 };
 

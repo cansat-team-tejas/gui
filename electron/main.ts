@@ -1,10 +1,23 @@
-import { app, BrowserWindow, Menu, globalShortcut } from "electron";
+import { app, BrowserWindow, Menu, globalShortcut, ipcMain } from "electron";
 import * as path from "path";
+import { SerialPort } from "serialport";
+const xbeeApi = require("xbee-api");
 
 const isDev = !app.isPackaged;
 
 let mainWindow: BrowserWindow | null = null;
+/** Only ever allow **one** open serial/XBee at a time in GUI */
+let activeSerialPort: SerialPort | null = null;
+let xbee: any = null;
 
+// -- XBee API setup: always API-escaped mode (mode 2) --
+const xbeeApiOptions = {
+  api_mode: 2,
+  module: "ZigBee",
+};
+const C = xbeeApi.constants;
+
+// -- Electron Window Setup (unchanged) --
 function createWindow(): void {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -19,25 +32,20 @@ function createWindow(): void {
     },
     titleBarStyle: "default",
     show: false,
-    autoHideMenuBar: true, // Always hide menu bar initially
-    frame: true, // Keep frame for window controls when not in fullscreen
+    autoHideMenuBar: true,
+    frame: true,
   });
 
   if (isDev) {
-    mainWindow.loadURL("http://localhost:5173").catch((err) => {
-      console.error("Failed to load development server:", err);
-    });
+    mainWindow.loadURL("http://localhost:5173").catch(console.error);
   } else {
     mainWindow
       .loadFile(path.join(__dirname, "../dist/index.html"))
-      .catch((err) => {
-        console.error("Failed to load production file:", err);
-      });
+      .catch(console.error);
   }
 
   mainWindow.once("ready-to-show", () => {
     if (mainWindow) {
-      // Start in true fullscreen mode with no menu bar
       mainWindow.setMenuBarVisibility(false);
       mainWindow.show();
     }
@@ -48,132 +56,215 @@ function createWindow(): void {
   });
 }
 
-// Create menu template
-const menuTemplate: Electron.MenuItemConstructorOptions[] = [
-  {
-    label: "View",
-    submenu: [
-      {
-        label: "Toggle Developer Tools",
-        accelerator: "CommandOrControl+I",
-        click: () => {
-          if (mainWindow) {
-            if (mainWindow.webContents.isDevToolsOpened()) {
-              mainWindow.webContents.closeDevTools();
-            } else {
-              mainWindow.webContents.openDevTools();
-            }
-          }
-        },
-      },
-      {
-        label: "Toggle Fullscreen",
-        accelerator: "CommandOrControl+F",
-        click: () => {
-          if (mainWindow) {
-            const isFullScreen = mainWindow.isFullScreen();
-            if (!isFullScreen) {
-              // Enter true fullscreen mode
-              mainWindow.setFullScreen(true);
-              mainWindow.setMenuBarVisibility(false);
-            } else {
-              // Exit fullscreen mode
-              mainWindow.setFullScreen(false);
-              mainWindow.setMenuBarVisibility(true);
-            }
-          }
-        },
-      },
-      { type: "separator" },
-      {
-        label: "Reload",
-        accelerator: "CommandOrControl+R",
-        click: () => {
-          if (mainWindow) {
-            mainWindow.webContents.reload();
-          }
-        },
-      },
-    ],
-  },
-];
-
-// This method will be called when Electron has finished initialization
 app.whenReady().then(() => {
   createWindow();
-
-  // Set menu
-  const menu = Menu.buildFromTemplate(menuTemplate);
+  const menu = Menu.buildFromTemplate([
+    {
+      label: "View",
+      submenu: [
+        {
+          label: "Toggle Developer Tools",
+          accelerator: "CommandOrControl+I",
+          click: () => {
+            if (mainWindow) {
+              if (mainWindow.webContents.isDevToolsOpened()) {
+                mainWindow.webContents.closeDevTools();
+              } else {
+                mainWindow.webContents.openDevTools();
+              }
+            }
+          },
+        },
+        {
+          label: "Toggle Fullscreen",
+          accelerator: "CommandOrControl+F",
+          click: () => {
+            if (mainWindow) {
+              const isFullScreen = mainWindow.isFullScreen();
+              mainWindow.setFullScreen(!isFullScreen);
+              mainWindow.setMenuBarVisibility(isFullScreen);
+            }
+          },
+        },
+        { type: "separator" },
+        {
+          label: "Reload",
+          accelerator: "CommandOrControl+R",
+          click: () => {
+            if (mainWindow) mainWindow.webContents.reload();
+          },
+        },
+      ],
+    },
+  ]);
   Menu.setApplicationMenu(menu);
-
-  // Register global shortcuts
   registerGlobalShortcuts();
 });
 
-function registerGlobalShortcuts(): void {
-  // Ctrl+I to toggle developer tools
-  globalShortcut.register("CommandOrControl+I", () => {
-    if (mainWindow) {
-      if (mainWindow.webContents.isDevToolsOpened()) {
-        mainWindow.webContents.closeDevTools();
-      } else {
-        mainWindow.webContents.openDevTools();
-      }
-    }
-  });
+// -- Serial Port Management with XBee (modern) --
 
-  // Ctrl+F to toggle fullscreen
+// List available serial ports
+ipcMain.handle("serial:list-ports", async () => {
+  try {
+    const ports = await SerialPort.list();
+    return { success: true, ports };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+});
+
+// Open serial port and set up XBee
+ipcMain.handle("serial:open", async (event, portPath: string, options: any) => {
+  try {
+    if (activeSerialPort?.isOpen) {
+      // Close any existing port
+      await new Promise((resolve) =>
+        activeSerialPort!.close(() => resolve(true))
+      );
+    }
+    // Safely destroy previous API
+    xbee = new xbeeApi.XBeeAPI(xbeeApiOptions);
+
+    activeSerialPort = new SerialPort({
+      path: portPath,
+      baudRate: options.baudRate || 9600,
+      dataBits: options.dataBits || 8,
+      stopBits: options.stopBits || 1,
+      parity: options.parity || "none",
+      autoOpen: false,
+    });
+
+    await new Promise<void>((resolve, reject) => {
+      activeSerialPort!.open((err) => (err ? reject(err) : resolve()));
+    });
+
+    // Pipe for XBee API parsing
+    activeSerialPort!.pipe(xbee.parser);
+    xbee.builder.pipe(activeSerialPort!);
+
+    xbee.parser.on("data", (frame: any) => {
+      mainWindow?.webContents.send("xbee:frame-received", frame);
+    });
+
+    activeSerialPort!.on("error", (err) => {
+      mainWindow?.webContents.send("serial:error", err?.message || String(err));
+    });
+
+    activeSerialPort!.on("close", () => {
+      mainWindow?.webContents.send("serial:port-closed");
+    });
+
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+});
+
+// Close serial port cleanly
+ipcMain.handle("serial:close", async () => {
+  try {
+    if (activeSerialPort && activeSerialPort.isOpen) {
+      await new Promise<void>((resolve) => {
+        activeSerialPort!.close(() => {
+          activeSerialPort = null;
+          xbee = null;
+          resolve();
+        });
+      });
+    }
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+});
+
+// Write XBee API frame to XBee (API mode)
+ipcMain.handle("xbee:send-frame", async (event, frameData: any) => {
+  try {
+    if (!activeSerialPort?.isOpen || !xbee) {
+      return { success: false, error: "XBee not connected" };
+    }
+    const builtFrame = xbee.buildFrame(frameData);
+    await new Promise<void>((resolve, reject) =>
+      activeSerialPort!.write(builtFrame, (err) =>
+        err ? reject(err) : resolve()
+      )
+    );
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+});
+
+// Write raw bytes to serial
+ipcMain.handle("serial:write", async (event, data: number[]) => {
+  try {
+    if (!activeSerialPort?.isOpen) {
+      return { success: false, error: "Serial port not open" };
+    }
+    const buffer = Buffer.from(data);
+    await new Promise<void>((resolve, reject) =>
+      activeSerialPort!.write(buffer, (err) => (err ? reject(err) : resolve()))
+    );
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+});
+
+// Port status
+ipcMain.handle("serial:status", async () => {
+  return {
+    isOpen: activeSerialPort?.isOpen || false,
+    path: activeSerialPort?.path || null,
+  };
+});
+
+// Clean, modern platform/shortcut/activation, no change from your previous logic:
+function registerGlobalShortcuts(): void {
+  globalShortcut.register("CommandOrControl+I", () => {
+    if (mainWindow)
+      mainWindow.webContents.isDevToolsOpened()
+        ? mainWindow.webContents.closeDevTools()
+        : mainWindow.webContents.openDevTools();
+  });
   globalShortcut.register("CommandOrControl+F", () => {
     if (mainWindow) {
       const isFullScreen = mainWindow.isFullScreen();
-      if (!isFullScreen) {
-        // Enter true fullscreen mode
-        mainWindow.setFullScreen(true);
-        mainWindow.setMenuBarVisibility(false);
-      } else {
-        // Exit fullscreen mode
-        mainWindow.setFullScreen(false);
-        mainWindow.setMenuBarVisibility(true);
-      }
+      mainWindow.setFullScreen(!isFullScreen);
+      mainWindow.setMenuBarVisibility(isFullScreen);
     }
   });
 }
 
-// Quit when all windows are closed
 app.on("window-all-closed", () => {
-  // Unregister all shortcuts
   globalShortcut.unregisterAll();
-
-  if (process.platform !== "darwin") {
-    app.quit();
-  }
+  if (process.platform !== "darwin") app.quit();
 });
-
 app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
+  if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });
-
-// Security: Prevent new window creation
 app.on("web-contents-created", (event, contents) => {
-  contents.setWindowOpenHandler(({ url }) => {
-    console.log("Blocked new window creation for URL:", url);
-    return { action: "deny" };
-  });
-});
-
-// Security: Prevent navigation to external URLs
-app.on("web-contents-created", (event, contents) => {
+  contents.setWindowOpenHandler(() => ({ action: "deny" }));
   contents.on("will-navigate", (event, navigationUrl) => {
-    const parsedUrl = new URL(navigationUrl);
-
-    if (
-      parsedUrl.origin !== "http://localhost:5173" &&
-      parsedUrl.origin !== "file://"
-    ) {
+    const allowed = new URL(navigationUrl).origin;
+    if (allowed !== "http://localhost:5173" && allowed !== "file://") {
       event.preventDefault();
-      console.log("Blocked navigation to:", navigationUrl);
     }
   });
 });
