@@ -3,7 +3,7 @@ import TelemetryPanel from "../telemetry-panel";
 
 const LeftPanel = () => {
   return (
-    <div className="h-full border border-r-black w-[400px]">
+    <div className="h-full border border-r-black min-w-[400px]">
       <CommunicationPanel />
       <TelemetryPanel />
     </div>

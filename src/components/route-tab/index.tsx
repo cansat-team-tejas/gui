@@ -33,7 +33,7 @@ const RouteTab = () => {
             key={tab.name}
             onClick={() => navigate(tab.path)}
             className={`flex items-center gap-2 px-3 text-[12px] w-max font-bold ${
-              pathname.includes(tab.path)
+              pathname === tab.path
                 ? "bg-[#00AD57] text-white"
                 : "bg-white text-black"
             }`}
