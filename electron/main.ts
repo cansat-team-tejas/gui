@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu } from "electron";
+import { app, BrowserWindow, Menu, globalShortcut } from "electron";
 import * as path from "path";
 
 const isDev = !app.isPackaged;
@@ -19,15 +19,14 @@ function createWindow(): void {
     },
     titleBarStyle: "default",
     show: false,
-    autoHideMenuBar: !isDev,
+    autoHideMenuBar: true, // Always hide menu bar initially
+    frame: true, // Keep frame for window controls when not in fullscreen
   });
 
-  // Load the app
   if (isDev) {
     mainWindow.loadURL("http://localhost:5173").catch((err) => {
       console.error("Failed to load development server:", err);
     });
-    // mainWindow.webContents.openDevTools();
   } else {
     mainWindow
       .loadFile(path.join(__dirname, "../dist/index.html"))
@@ -38,6 +37,8 @@ function createWindow(): void {
 
   mainWindow.once("ready-to-show", () => {
     if (mainWindow) {
+      // Start in true fullscreen mode with no menu bar
+      mainWindow.setMenuBarVisibility(false);
       mainWindow.show();
     }
   });
@@ -48,7 +49,54 @@ function createWindow(): void {
 }
 
 // Create menu template
-const menuTemplate: Electron.MenuItemConstructorOptions[] = [];
+const menuTemplate: Electron.MenuItemConstructorOptions[] = [
+  {
+    label: "View",
+    submenu: [
+      {
+        label: "Toggle Developer Tools",
+        accelerator: "CommandOrControl+I",
+        click: () => {
+          if (mainWindow) {
+            if (mainWindow.webContents.isDevToolsOpened()) {
+              mainWindow.webContents.closeDevTools();
+            } else {
+              mainWindow.webContents.openDevTools();
+            }
+          }
+        },
+      },
+      {
+        label: "Toggle Fullscreen",
+        accelerator: "CommandOrControl+F",
+        click: () => {
+          if (mainWindow) {
+            const isFullScreen = mainWindow.isFullScreen();
+            if (!isFullScreen) {
+              // Enter true fullscreen mode
+              mainWindow.setFullScreen(true);
+              mainWindow.setMenuBarVisibility(false);
+            } else {
+              // Exit fullscreen mode
+              mainWindow.setFullScreen(false);
+              mainWindow.setMenuBarVisibility(true);
+            }
+          }
+        },
+      },
+      { type: "separator" },
+      {
+        label: "Reload",
+        accelerator: "CommandOrControl+R",
+        click: () => {
+          if (mainWindow) {
+            mainWindow.webContents.reload();
+          }
+        },
+      },
+    ],
+  },
+];
 
 // This method will be called when Electron has finished initialization
 app.whenReady().then(() => {
@@ -57,10 +105,45 @@ app.whenReady().then(() => {
   // Set menu
   const menu = Menu.buildFromTemplate(menuTemplate);
   Menu.setApplicationMenu(menu);
+
+  // Register global shortcuts
+  registerGlobalShortcuts();
 });
+
+function registerGlobalShortcuts(): void {
+  // Ctrl+I to toggle developer tools
+  globalShortcut.register("CommandOrControl+I", () => {
+    if (mainWindow) {
+      if (mainWindow.webContents.isDevToolsOpened()) {
+        mainWindow.webContents.closeDevTools();
+      } else {
+        mainWindow.webContents.openDevTools();
+      }
+    }
+  });
+
+  // Ctrl+F to toggle fullscreen
+  globalShortcut.register("CommandOrControl+F", () => {
+    if (mainWindow) {
+      const isFullScreen = mainWindow.isFullScreen();
+      if (!isFullScreen) {
+        // Enter true fullscreen mode
+        mainWindow.setFullScreen(true);
+        mainWindow.setMenuBarVisibility(false);
+      } else {
+        // Exit fullscreen mode
+        mainWindow.setFullScreen(false);
+        mainWindow.setMenuBarVisibility(true);
+      }
+    }
+  });
+}
 
 // Quit when all windows are closed
 app.on("window-all-closed", () => {
+  // Unregister all shortcuts
+  globalShortcut.unregisterAll();
+
   if (process.platform !== "darwin") {
     app.quit();
   }

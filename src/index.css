@@ -1,24 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@100..700&display=swap');
+
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Custom styles for CanSat GUI */
-@layer base {
-  body {
-    @apply bg-cansat-light text-cansat-dark;
-  }
-}
 
-@layer components {
-  .card {
-    @apply bg-white rounded-lg shadow-md p-6 border border-gray-200;
-  }
-  
-  .btn-primary {
-    @apply bg-cansat-primary hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition-colors duration-200;
-  }
-  
-  .btn-secondary {
-    @apply bg-cansat-secondary hover:bg-sky-600 text-white font-medium py-2 px-4 rounded transition-colors duration-200;
-  }
-}
+

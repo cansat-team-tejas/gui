@@ -7,14 +7,13 @@ export default {
   theme: {
     extend: {
       colors: {
-        cansat: {
-          primary: '#1e40af',
-          secondary: '#0ea5e9',
-          accent: '#3b82f6',
-          dark: '#1e293b',
-          light: '#f8fafc'
-        }
-      }
+        
+      },
+      fontFamily: {
+        'sans': ['Roboto Mono', 'monospace'],
+        'mono': ['Roboto Mono', 'monospace'],
+        'roboto-mono': ['Roboto Mono', 'monospace'],
+      },
     },
   },
   plugins: [],
