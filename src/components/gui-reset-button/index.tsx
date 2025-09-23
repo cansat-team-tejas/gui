@@ -5,8 +5,8 @@ interface GuiResetButtonProps {
   className?: string;
 }
 
-export const GuiResetButton: React.FC<GuiResetButtonProps> = ({ 
-  className = "" 
+export const GuiResetButton: React.FC<GuiResetButtonProps> = ({
+  className = "",
 }) => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
@@ -17,19 +17,18 @@ export const GuiResetButton: React.FC<GuiResetButtonProps> = ({
 
   const handleConfirmReset = async () => {
     setIsResetting(true);
-    
+
     try {
       // Clear all localStorage data
       localStorage.clear();
-      
+
       // Clear sessionStorage data
       sessionStorage.clear();
-      
+
       // Reset application state by reloading
       setTimeout(() => {
         window.location.reload();
       }, 500);
-      
     } catch (error) {
       console.error("Failed to reset GUI:", error);
       setIsResetting(false);

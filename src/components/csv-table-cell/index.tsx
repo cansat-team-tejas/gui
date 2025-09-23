@@ -69,16 +69,22 @@ const CsvTableCell: React.FC<CsvTableCellProps> = ({ value, fieldName }) => {
         if (!val || val === "") return "";
         const parsedLog = parseLogMessage(val);
         if (parsedLog.isSystemLog) {
-          return parsedLog.meaning.substring(0, 30) + 
-            (parsedLog.meaning.length > 30 ? "..." : "");
+          return (
+            parsedLog.meaning.substring(0, 30) +
+            (parsedLog.meaning.length > 30 ? "..." : "")
+          );
         }
-        return val.toString().substring(0, 20) + 
-          (val.toString().length > 20 ? "..." : "");
+        return (
+          val.toString().substring(0, 20) +
+          (val.toString().length > 20 ? "..." : "")
+        );
 
       case "CMD_ECHO":
         if (!val || val === "") return "";
-        return val.toString().substring(0, 20) + 
-          (val.toString().length > 20 ? "..." : "");
+        return (
+          val.toString().substring(0, 20) +
+          (val.toString().length > 20 ? "..." : "")
+        );
 
       default:
         return val.toString();
@@ -132,7 +138,10 @@ const CsvTableCell: React.FC<CsvTableCellProps> = ({ value, fieldName }) => {
             SD_CARD: "bg-gray-100",
             CALIBRATION: "bg-pink-100",
           };
-          return baseClass.replace("bg-white", categoryColors[parsedLog.category] || "bg-orange-100");
+          return baseClass.replace(
+            "bg-white",
+            categoryColors[parsedLog.category] || "bg-orange-100"
+          );
         }
         return baseClass.replace("bg-white", "bg-orange-50");
 
