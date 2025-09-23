@@ -1,12 +1,24 @@
+import { useMemo } from "react";
 import LabelValue, { SmallFont } from "../label-value";
+import { useTelemetryLatest } from "../../hooks/use-xbee";
+import {
+  getSafeTelemetryData,
+  formatTelemetryValue,
+} from "../../utils/telemetry-helpers";
 
 const TelemetryPanel = () => {
+  const latestTelemetry = useTelemetryLatest();
+
+  // Use safe telemetry data with proper fallbacks
+  const telemetryData = getSafeTelemetryData(latestTelemetry);
+
   const TELEMETRY_DATA = [
     {
       label: "BAROMETRIC ALTITUDE",
       value: (
         <>
-          143<SmallFont>m</SmallFont>
+          {telemetryData.ALTITUDE.toFixed(1)}
+          <SmallFont>m</SmallFont>
         </>
       ),
     },
@@ -14,7 +26,8 @@ const TelemetryPanel = () => {
       label: "GNSS ALTITUDE",
       value: (
         <>
-          143<SmallFont>m</SmallFont>
+          {telemetryData.GPS_ALTITUDE.toFixed(1)}
+          <SmallFont>m</SmallFont>
         </>
       ),
     },
@@ -22,7 +35,8 @@ const TelemetryPanel = () => {
       label: "TEMPERATURE",
       value: (
         <>
-          22.4<SmallFont>°C</SmallFont>
+          {telemetryData.TEMP.toFixed(1)}
+          <SmallFont>°c</SmallFont>
         </>
       ),
     },
@@ -30,7 +44,8 @@ const TelemetryPanel = () => {
       label: "PRESSURE",
       value: (
         <>
-          101.2<SmallFont>hPa</SmallFont>
+          {telemetryData.PRESSURE}
+          <SmallFont>Pa</SmallFont>
         </>
       ),
     },
@@ -38,7 +53,8 @@ const TelemetryPanel = () => {
       label: "HUMIDITY",
       value: (
         <>
-          40<SmallFont>%</SmallFont>
+          {telemetryData.HUMIDITY.toFixed(1)}
+          <SmallFont>%</SmallFont>
         </>
       ),
     },
@@ -46,7 +62,8 @@ const TelemetryPanel = () => {
       label: "VOLTAGE",
       value: (
         <>
-          7.7<SmallFont>v</SmallFont>
+          {telemetryData.VOLTAGE.toFixed(1)}
+          <SmallFont>v</SmallFont>
         </>
       ),
     },
@@ -54,7 +71,8 @@ const TelemetryPanel = () => {
       label: "CURRENT",
       value: (
         <>
-          30<SmallFont>A</SmallFont>
+          {telemetryData.CURRENT.toFixed(1)}
+          <SmallFont>A</SmallFont>
         </>
       ),
     },
@@ -62,7 +80,8 @@ const TelemetryPanel = () => {
       label: "POWER",
       value: (
         <>
-          15<SmallFont>w</SmallFont>
+          {telemetryData.POWER.toFixed(1)}
+          <SmallFont>w</SmallFont>
         </>
       ),
     },
@@ -72,7 +91,9 @@ const TelemetryPanel = () => {
         <>
           (
           <span>
-            15.4<SmallFont>m</SmallFont>,45.67°,23.45°
+            {telemetryData.GPS_ALTITUDE.toFixed(1)}
+            <SmallFont>m</SmallFont>,{telemetryData.LATITUDE.toFixed(3)}°,
+            {telemetryData.LONGITUDE.toFixed(3)}°
           </span>
           )
         </>
@@ -80,13 +101,15 @@ const TelemetryPanel = () => {
     },
     {
       label: "GPS SATELLITES",
-      value: <>7</>,
+      value: <>{telemetryData.SATELLITES}</>,
     },
     {
       label: "ATTITUDE",
       value: (
         <>
-          (15<SmallFont>°</SmallFont>, 12<SmallFont>°</SmallFont>, 7
+          ({telemetryData.ROLL.toFixed(1)}
+          <SmallFont>°</SmallFont>, {telemetryData.PITCH.toFixed(1)}
+          <SmallFont>°</SmallFont>, {telemetryData.YAW.toFixed(1)}
           <SmallFont>°</SmallFont>)
         </>
       ),
@@ -95,7 +118,9 @@ const TelemetryPanel = () => {
       label: "ACCELERATION",
       value: (
         <>
-          (15<SmallFont>m/s²</SmallFont>, 12<SmallFont>m/s²</SmallFont>, 7
+          ({telemetryData.ACCEL_X.toFixed(1)}
+          <SmallFont>m/s²</SmallFont>, {telemetryData.ACCEL_Y.toFixed(1)}
+          <SmallFont>m/s²</SmallFont>, {telemetryData.ACCEL_Z.toFixed(1)}
           <SmallFont>m/s²</SmallFont>)
         </>
       ),
@@ -104,8 +129,11 @@ const TelemetryPanel = () => {
       label: "GYROSCOPE",
       value: (
         <>
-          <SmallFont>(</SmallFont>15<SmallFont>°/s</SmallFont>, 12
-          <SmallFont>°/s</SmallFont>, 7<SmallFont>°/s)</SmallFont>
+          <SmallFont>(</SmallFont>
+          {telemetryData.GYRO_X.toFixed(1)}
+          <SmallFont>°/s</SmallFont>, {telemetryData.GYRO_Y.toFixed(1)}
+          <SmallFont>°/s</SmallFont>, {telemetryData.GYRO_Z.toFixed(1)}
+          <SmallFont>°/s)</SmallFont>
         </>
       ),
     },
@@ -113,7 +141,9 @@ const TelemetryPanel = () => {
       label: "MAGNETOMETER",
       value: (
         <>
-          (15<SmallFont>μT</SmallFont>, 12<SmallFont>μT</SmallFont>, 7
+          ({telemetryData.MAG_X.toFixed(1)}
+          <SmallFont>μT</SmallFont>, {telemetryData.MAG_Y.toFixed(1)}
+          <SmallFont>μT</SmallFont>, {telemetryData.MAG_Z.toFixed(1)}
           <SmallFont>μT</SmallFont>)
         </>
       ),
@@ -122,7 +152,8 @@ const TelemetryPanel = () => {
       label: "AIR QUALITY",
       value: (
         <>
-          23<SmallFont>PPM</SmallFont>
+          {telemetryData.AIR_QUALITY_PPM.toFixed(1)}
+          <SmallFont>PPM</SmallFont>
         </>
       ),
     },
@@ -130,7 +161,8 @@ const TelemetryPanel = () => {
       label: "ROTATION RATE",
       value: (
         <>
-          23<SmallFont>/s</SmallFont>
+          {telemetryData.GYRO_SPIN.toFixed(1)}
+          <SmallFont>/s</SmallFont>
         </>
       ),
     },

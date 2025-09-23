@@ -35,7 +35,7 @@ const RhfDropdown: React.FC<RhfDropdownProps> = ({
           <option
             key={option.value}
             value={option.value}
-            className="bg-white text-black"
+            className="bg-white text-black rounded-none"
           >
             {option.label}
           </option>

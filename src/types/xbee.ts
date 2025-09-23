@@ -84,7 +84,7 @@ export const MISSION_CONFIG = {
   ACKNOWLEDGEMENT_INTERVAL: 2000,
 } as const;
 
-export const FRAME_TYPES = {
+export const FRAME_ADDRESS_TYPES = {
   TX_REQUEST: 0x10,
   TX_STATUS: 0x8b,
   RX_PACKET: 0x90,

@@ -6,6 +6,8 @@ interface RhfTextFieldProps {
   placeholder?: string;
   className?: string;
   label?: string;
+  disabled?: boolean;
+  type?: "text" | "number" | "email" | "password";
 }
 
 const RhfTextField: React.FC<RhfTextFieldProps> = ({
@@ -13,6 +15,8 @@ const RhfTextField: React.FC<RhfTextFieldProps> = ({
   placeholder = "SEARCH",
   className = "",
   label,
+  disabled = false,
+  type = "text",
 }) => {
   const {
     register,
@@ -28,13 +32,16 @@ const RhfTextField: React.FC<RhfTextFieldProps> = ({
       <div
         className={`border border-black bg-white px-2 py-1 h-[25px] flex items-center hover:bg-gray-50 focus-within:ring-1 focus-within:ring-black ${
           error ? "border-red-500" : ""
+        } ${
+          disabled ? "opacity-50 cursor-not-allowed bg-gray-100" : ""
         } ${className}`}
       >
         <input
           {...register(name)}
-          type="text"
+          type={type}
           placeholder={placeholder}
-          className="font-bold text-[10px] text-black bg-transparent border-none outline-none flex-1 placeholder:text-gray-500"
+          disabled={disabled}
+          className="font-bold text-[10px] text-black bg-transparent border-none outline-none flex-1 placeholder:text-gray-500 disabled:cursor-not-allowed"
         />
       </div>
       {error && (

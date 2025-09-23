@@ -1,37 +1,48 @@
-export interface TableColumn<T> {
-  header: string;
-  accessor: keyof T;
-}
+import { useMemo, useCallback } from "react";
+import { TableColumnComponent } from "./table-column";
+import { useWatch } from "react-hook-form";
+import { ICanSatTelemetryData, columns } from "../../data/csv-data";
+import { useTelemetryHistory } from "../../hooks/use-xbee";
+import { transformTelemetryToCSV } from "../../utils/telemetry-helpers";
+import { filterTelemetryData } from "../../utils/data-processing";
 
-interface CsvDataTableProps<T> {
-  data: T[];
-  columns: TableColumn<T>[];
-}
+function CsvDataTable() {
+  const searchTerm = useWatch({ name: "searchTerm" }) as string;
+  const searchColumn = useWatch({
+    name: "searchColumn",
+  }) as keyof ICanSatTelemetryData;
 
-function CsvDataTable<T>({ data, columns }: CsvDataTableProps<T>) {
+  const telemetryHistory = useTelemetryHistory();
+
+  // Memoize the transformed CSV data
+  const csvData = useMemo(() => {
+    return transformTelemetryToCSV(telemetryHistory);
+  }, [telemetryHistory]);
+
+  // Memoize the filtered data
+  const filteredData = useMemo(() => {
+    return filterTelemetryData(csvData, searchTerm, searchColumn);
+  }, [csvData, searchTerm, searchColumn]);
+
+  // Memoize columns to prevent re-renders
+  const memoizedColumns = useMemo(() => columns, []);
+
+  // Memoized render function for columns
+  const renderColumn = useCallback(
+    (col: (typeof columns)[0]) => (
+      <TableColumnComponent
+        key={String(col.accessor)}
+        column={col}
+        data={filteredData}
+      />
+    ),
+    [filteredData]
+  );
+
   return (
-    <div className="max-h-full border border-black border-b-0">
+    <div className="max-h-full border border-black border-b overflow-hidden">
       <div className="flex overflow-auto max-h-full">
-        {columns.map((col) => (
-          <div
-            key={String(col.accessor)}
-            className="flex flex-col min-w-[140px] border-r border-black last:border-r-0"
-          >
-            <div className="bg-[#D9D9D9] flex items-center justify-center h-[30px] px-2 py-1 border-b border-black text-[12px] font-bold text-black text-center sticky top-0">
-              {col.header}
-            </div>
-            <div className="flex-1">
-              {data.map((row, rowIdx) => (
-                <div
-                  key={rowIdx}
-                  className="flex items-center justify-center h-[25px] px-2 py-1 border-b border-black text-[10px] font-bold text-black text-center bg-white hover:bg-gray-50 transition-colors"
-                >
-                  {String(row[col.accessor])}
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
+        {memoizedColumns.map(renderColumn)}
       </div>
     </div>
   );

@@ -37,7 +37,7 @@ function createWindow(): void {
   });
 
   if (isDev) {
-    mainWindow.loadURL("http://localhost:5173").catch(console.error);
+    mainWindow.loadURL("http://localhost:5178").catch(console.error);
   } else {
     mainWindow
       .loadFile(path.join(__dirname, "../dist/index.html"))
@@ -146,9 +146,13 @@ ipcMain.handle("serial:open", async (event, portPath: string, options: any) => {
     xbee.builder.pipe(activeSerialPort!);
 
     xbee.parser.on("data", (frame: any) => {
+      // Convert Buffer to string if present
+      if (frame.data && Buffer.isBuffer(frame.data)) {
+        frame.data = frame.data.toString();
+      }
+
       mainWindow?.webContents.send("xbee:frame-received", frame);
     });
-
     activeSerialPort!.on("error", (err) => {
       mainWindow?.webContents.send("serial:error", err?.message || String(err));
     });

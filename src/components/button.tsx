@@ -1,6 +1,6 @@
 import React from "react";
 
-interface ButtonProps {
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
   onClick?: () => void;
   className?: string;
@@ -14,6 +14,8 @@ const Button: React.FC<ButtonProps> = ({
   className = "",
   disabled = false,
   variant = "default",
+  type = "button",
+  ...rest
 }) => {
   const getVariantClasses = () => {
     switch (variant) {
@@ -28,6 +30,7 @@ const Button: React.FC<ButtonProps> = ({
 
   return (
     <button
+      type={type}
       onClick={onClick}
       disabled={disabled}
       className={`border border-black px-3 py-1 text-[12px] font-bold h-[25px] flex items-center justify-center ${getVariantClasses()} ${
@@ -35,6 +38,7 @@ const Button: React.FC<ButtonProps> = ({
           ? "opacity-50 cursor-not-allowed"
           : "hover:opacity-80 cursor-pointer"
       } ${className}`}
+      {...rest}
     >
       {children}
     </button>

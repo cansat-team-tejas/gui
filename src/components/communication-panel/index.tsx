@@ -1,12 +1,53 @@
+import { useEffect, useState } from "react";
 import LabelValue, { SmallFont } from "../label-value";
+import { useXBeeStore, xbeeSelectors } from "../../store/xbee";
+import {
+  useTelemetryLatest,
+  useTelemetryDataRate,
+  useMissionPacketsReceived,
+  useLastCommandEcho,
+} from "../../hooks/use-xbee";
+import {
+  getSafeTelemetryData,
+  getRSSIStatus,
+  formatTelemetryValue,
+} from "../../utils/telemetry-helpers";
 
 const CommunicationPanel = () => {
+  const latestTelemetry = useTelemetryLatest();
+  const dataRate = useTelemetryDataRate();
+  const packetsReceived = useMissionPacketsReceived();
+  const lastCommandEcho = useLastCommandEcho();
+  const rssiUplink = useXBeeStore(xbeeSelectors.rssiUplink);
+  const rssiDownlink = useXBeeStore(xbeeSelectors.rssiDownlink);
+  const [missionStartTime, setMissionStartTime] = useState<Date | null>(null);
+
+  // Use safe telemetry data with utilities
+  const safeTelemetry = getSafeTelemetryData(latestTelemetry);
+  const rssiStatus = getRSSIStatus(safeTelemetry.RSSI_DBM);
+
+  const commStats = {
+    missionTime: safeTelemetry.MISSION_TIME_S, // Use actual mission time from telemetry
+    packetsReceived,
+    packetRate: dataRate,
+    rssi: safeTelemetry.RSSI_DBM,
+    cmdEcho: lastCommandEcho?.COMMAND_ECHO || "NO_CMD",
+  };
+
+  // Set mission start time when first packet arrives
+  useEffect(() => {
+    if (commStats.packetsReceived > 0 && !missionStartTime) {
+      setMissionStartTime(new Date());
+    }
+  }, [commStats.packetsReceived, missionStartTime]);
+
   const LABEL_VALUE = [
     {
       label: "MISSION TIMER",
       value: (
         <>
-          10<SmallFont>seconds</SmallFont>
+          {formatTelemetryValue(commStats.missionTime, 1)}
+          <SmallFont>seconds</SmallFont>
         </>
       ),
     },
@@ -14,34 +55,37 @@ const CommunicationPanel = () => {
       label: "PACKET RATE",
       value: (
         <>
-          1.6<SmallFont>Hz</SmallFont>
+          {commStats.packetRate.toFixed(1)}
+          <SmallFont>Hz</SmallFont>
         </>
       ),
     },
     {
       label: "PACKET RECEIVED",
-      value: <>10</>,
+      value: <>{commStats.packetsReceived}</>,
     },
     {
       label: "PACKET SENT",
-      value: <>65</>,
+      value: <>0</>,
+    },
+    {
+      label: "COMMAND ECHO",
+      value: <>{commStats.cmdEcho}</>,
     },
     {
       label: "RSSI DOWN / UP",
       value: (
         <div className="flex gap-1">
-          <div className="bg-[#00AD57] text-white px-2 w-max">
-            65<SmallFont>dBm</SmallFont>
+          <div className={`text-white px-2 w-max ${rssiStatus.color}`}>
+            {rssiDownlink ? Math.abs(rssiDownlink) : Math.abs(commStats.rssi)}
+            <SmallFont>dBm</SmallFont>
           </div>
-          <div className="bg-[#00AD57] text-white px-2 w-max">
-            65<SmallFont>dBm</SmallFont>
+          <div className="bg-[#D9D9D9] text-black px-2 w-max">
+            {rssiUplink ? Math.abs(rssiUplink) : "N/A"}
+            <SmallFont>dBm</SmallFont>
           </div>
         </div>
       ),
-    },
-    {
-      label: "COMMAND ECHO",
-      value: <>NO_CMD</>,
     },
   ];
 

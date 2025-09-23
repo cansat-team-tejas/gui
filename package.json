@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "concurrently \"bun run dev:vite\" \"bun run dev:electron\"",
     "dev:vite": "cross-env NODE_ENV=development vite",
-    "dev:electron": "cross-env NODE_ENV=development wait-on http://localhost:5173 && bun run compile:electron && electron dist-electron/main.js",
+    "dev:electron": "cross-env NODE_ENV=development wait-on http://localhost:5178 && bun run compile:electron && electron dist-electron/main.js",
     "compile:electron": "tsc -p tsconfig.electron.json",
     "build": "vite build && bun run compile:electron",
     "build:electron": "bun run build && electron-builder",
