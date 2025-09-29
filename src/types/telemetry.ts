@@ -36,7 +36,15 @@ export interface ITelemetryType {
   AIR_QUALITY_RAW: number;
   AIR_QUALITY_PPM: number;
   BARO_ALTITUDE: number;
-  RSSI_DBM: number;
+  RSSI_DBM: number; // Uplink RSSI measured by CanSat from ground station
+  // New telemetry fields
+  AQ_CO_PPM?: number;
+  AQ_CH4_PPM?: number;
+  AQ_NH3_PPM?: number;
+  AQ_H2_PPM?: number;
+  AQ_ETHANOL_PPM?: number;
+  MCU_TEMP_C?: number;
+  HEALTH_FLAGS?: number; // unsigned long in FW; store as number here
   CMD_ECHO: string;
   LOG_DATA: string;
   [key: string]: any; // Allow additional properties

@@ -61,8 +61,7 @@ export const createFrameProcessingActions = (
           break;
 
         case FRAME_TYPES.UNKNOWN:
-          // Handle unknown frame types - just log for now
-          console.warn("Unknown frame type received:", raw);
+          // Unknown frames are logged but not processed
           break;
       }
 
@@ -79,12 +78,49 @@ export const createFrameProcessingActions = (
         state.statistics.totalFramesProcessed += 1;
       });
     } catch (error) {
-      console.error("Frame processing error:", error);
+      // Silent fail - frame processing errors are tracked in statistics
       set((state: XBeeStore) => {
         state.statistics.processingErrors += 1;
         state.statistics.errorsCount += 1;
       });
       get().addActivity("ERROR", undefined, "Frame processing failed");
+    }
+  },
+
+  processATResponse: (frame: any) => {
+    try {
+      const store = get();
+
+      // Check if this is a DB command response
+      if (frame.command === "DB" && frame.status === 0) {
+        let rssiValue = frame.value;
+
+        // Convert to proper dBm format if needed
+        if (rssiValue && rssiValue > 0) {
+          rssiValue = -rssiValue;
+        }
+
+        if (rssiValue !== undefined && rssiValue !== null) {
+          store.updateRSSI(undefined, rssiValue);
+          store.addActivity(
+            "FRAME_RECEIVED",
+            "AT_RESPONSE",
+            `Downlink RSSI: ${rssiValue} dBm`
+          );
+        }
+      }
+
+      // Update statistics
+      set((state: XBeeStore) => {
+        state.statistics.packetsReceived += 1;
+        state.statistics.totalFramesProcessed += 1;
+      });
+    } catch (error) {
+      set((state: XBeeStore) => {
+        state.statistics.processingErrors += 1;
+        state.statistics.errorsCount += 1;
+      });
+      get().addActivity("ERROR", undefined, "AT response processing failed");
     }
   },
 

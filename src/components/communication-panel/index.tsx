@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import LabelValue, { SmallFont } from "../label-value";
 import { useXBeeStore, xbeeSelectors } from "../../store/xbee";
 import {
   useTelemetryLatest,
   useTelemetryDataRate,
   useMissionPacketsReceived,
+  useMissionPacketsSent,
   useLastCommandEcho,
 } from "../../hooks/use-xbee";
 import {
@@ -17,77 +18,91 @@ const CommunicationPanel = () => {
   const latestTelemetry = useTelemetryLatest();
   const dataRate = useTelemetryDataRate();
   const packetsReceived = useMissionPacketsReceived();
+  const packetsSent = useMissionPacketsSent();
   const lastCommandEcho = useLastCommandEcho();
   const rssiUplink = useXBeeStore(xbeeSelectors.rssiUplink);
   const rssiDownlink = useXBeeStore(xbeeSelectors.rssiDownlink);
-  const [missionStartTime, setMissionStartTime] = useState<Date | null>(null);
+  const rssiLastUpdate = useXBeeStore(xbeeSelectors.rssiLastUpdate);
 
-  // Use safe telemetry data with utilities
-  const safeTelemetry = getSafeTelemetryData(latestTelemetry);
-  const rssiStatus = getRSSIStatus(safeTelemetry.RSSI_DBM);
+  // Memoize expensive calculations
+  const safeTelemetry = useMemo(
+    () => getSafeTelemetryData(latestTelemetry),
+    [latestTelemetry]
+  );
+  const rssiStatus = useMemo(
+    () => getRSSIStatus(rssiDownlink || 0),
+    [rssiDownlink]
+  );
 
-  const commStats = {
-    missionTime: safeTelemetry.MISSION_TIME_S, // Use actual mission time from telemetry
-    packetsReceived,
-    packetRate: dataRate,
-    rssi: safeTelemetry.RSSI_DBM,
-    cmdEcho: lastCommandEcho?.COMMAND_ECHO || "NO_CMD",
-  };
+  const commStats = useMemo(
+    () => ({
+      missionTime: safeTelemetry.MISSION_TIME_S,
+      packetsReceived,
+      packetsSent,
+      packetRate: dataRate,
+      rssi: safeTelemetry.RSSI_DBM,
+      cmdEcho: lastCommandEcho?.COMMAND_ECHO || "NO_CMD",
+    }),
+    [
+      safeTelemetry.MISSION_TIME_S,
+      safeTelemetry.RSSI_DBM,
+      packetsReceived,
+      packetsSent,
+      dataRate,
+      lastCommandEcho,
+    ]
+  );
 
-  // Set mission start time when first packet arrives
-  useEffect(() => {
-    if (commStats.packetsReceived > 0 && !missionStartTime) {
-      setMissionStartTime(new Date());
-    }
-  }, [commStats.packetsReceived, missionStartTime]);
-
-  const LABEL_VALUE = [
-    {
-      label: "MISSION TIMER",
-      value: (
-        <>
-          {formatTelemetryValue(commStats.missionTime, 1)}
-          <SmallFont>seconds</SmallFont>
-        </>
-      ),
-    },
-    {
-      label: "PACKET RATE",
-      value: (
-        <>
-          {commStats.packetRate.toFixed(1)}
-          <SmallFont>Hz</SmallFont>
-        </>
-      ),
-    },
-    {
-      label: "PACKET RECEIVED",
-      value: <>{commStats.packetsReceived}</>,
-    },
-    {
-      label: "PACKET SENT",
-      value: <>0</>,
-    },
-    {
-      label: "COMMAND ECHO",
-      value: <>{commStats.cmdEcho}</>,
-    },
-    {
-      label: "RSSI DOWN / UP",
-      value: (
-        <div className="flex gap-1">
-          <div className={`text-white px-2 w-max ${rssiStatus.color}`}>
-            {rssiDownlink ? Math.abs(rssiDownlink) : Math.abs(commStats.rssi)}
-            <SmallFont>dBm</SmallFont>
+  const LABEL_VALUE = useMemo(
+    () => [
+      {
+        label: "MISSION TIMER",
+        value: (
+          <>
+            {formatTelemetryValue(commStats.missionTime, 1)}
+            <SmallFont>seconds</SmallFont>
+          </>
+        ),
+      },
+      {
+        label: "PACKET RATE",
+        value: (
+          <>
+            {commStats.packetRate.toFixed(1)}
+            <SmallFont>Hz</SmallFont>
+          </>
+        ),
+      },
+      {
+        label: "PACKET RECEIVED",
+        value: <>{commStats.packetsReceived}</>,
+      },
+      {
+        label: "PACKET SENT",
+        value: <>{commStats.packetsSent}</>,
+      },
+      {
+        label: "COMMAND ECHO",
+        value: <>{commStats.cmdEcho}</>,
+      },
+      {
+        label: "RSSI DOWN / UP",
+        value: (
+          <div className="flex items-center gap-1">
+            <div className={`text-white px-2 w-max ${rssiStatus.color}`}>
+              {rssiDownlink !== null ? Math.abs(rssiDownlink) : "N/A"}
+              <SmallFont>dBm</SmallFont>
+            </div>
+            <div className="text-white px-2 w-max bg-green-600">
+              {rssiUplink !== null ? Math.abs(rssiUplink) : "N/A"}
+              <SmallFont>dBm</SmallFont>
+            </div>
           </div>
-          <div className="bg-[#D9D9D9] text-black px-2 w-max">
-            {rssiUplink ? Math.abs(rssiUplink) : "N/A"}
-            <SmallFont>dBm</SmallFont>
-          </div>
-        </div>
-      ),
-    },
-  ];
+        ),
+      },
+    ],
+    [commStats, rssiStatus.color, rssiDownlink, rssiUplink, rssiLastUpdate]
+  );
 
   return (
     <section about="Communication Information">

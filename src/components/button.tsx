@@ -1,7 +1,7 @@
-import React from "react";
+import { ButtonHTMLAttributes, ReactNode } from "react";
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  children: React.ReactNode;
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  children: ReactNode;
   onClick?: () => void;
   className?: string;
   disabled?: boolean;
@@ -36,7 +36,7 @@ const Button: React.FC<ButtonProps> = ({
       className={`border border-black px-3 py-1 text-[12px] font-bold h-[25px] flex items-center justify-center ${getVariantClasses()} ${
         disabled
           ? "opacity-50 cursor-not-allowed"
-          : "hover:opacity-80 cursor-pointer"
+          : "hover:opacity-80 cursor-pointer active:transform active:scale-95 transition-all duration-100"
       } ${className}`}
       {...rest}
     >

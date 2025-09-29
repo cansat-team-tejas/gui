@@ -81,6 +81,13 @@ export interface ITelemetryDataType {
   AIR_QUALITY_PPM: number;
   BARO_ALTITUDE: number;
   RSSI_DBM: number;
+  AQ_CO_PPM: number;
+  AQ_CH4_PPM: number;
+  AQ_NH3_PPM: number;
+  AQ_H2_PPM: number;
+  AQ_ETHANOL_PPM: number;
+  MCU_TEMP_C: number;
+  HEALTH_FLAGS: number;
   CMD_ECHO: string;
   LOG_DATA: string;
 }
@@ -137,6 +144,13 @@ export const columns: TableColumn[] = [
   { header: "AIR_QUALITY_PPM", accessor: "AIR_QUALITY_PPM" },
   { header: "BARO_ALT", accessor: "BARO_ALTITUDE" },
   { header: "RSSI_DBM", accessor: "RSSI_DBM" },
+  { header: "AQ_CO_PPM", accessor: "AQ_CO_PPM" },
+  { header: "AQ_CH4_PPM", accessor: "AQ_CH4_PPM" },
+  { header: "AQ_NH3_PPM", accessor: "AQ_NH3_PPM" },
+  { header: "AQ_H2_PPM", accessor: "AQ_H2_PPM" },
+  { header: "AQ_ETHANOL_PPM", accessor: "AQ_ETHANOL_PPM" },
+  { header: "MCU_TEMP_C", accessor: "MCU_TEMP_C" },
+  { header: "HEALTH_FLAGS", accessor: "HEALTH_FLAGS" },
   { header: "CMD_ECHO", accessor: "CMD_ECHO" },
   { header: "LOG_DATA", accessor: "LOG_DATA" },
 ];

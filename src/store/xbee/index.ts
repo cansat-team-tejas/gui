@@ -16,6 +16,7 @@ import { createConnectionActions } from "./connection-actions";
 import { createFrameProcessingActions } from "./frame-processing-actions";
 import { createTransmissionActions } from "./transmission-actions";
 import { createActivityActions } from "./activity-actions";
+import { createSystemActions } from "./system-actions";
 
 // Selectors
 export { xbeeSelectors } from "./selectors";
@@ -40,6 +41,7 @@ export const useXBeeStore = create<XBeeStore>()(
       const frameProcessingActions = createFrameProcessingActions(set, get);
       const transmissionActions = createTransmissionActions(set, get);
       const activityActions = createActivityActions(set, get);
+      const systemActions = createSystemActions(set, get);
 
       return {
         // ========================================================================
@@ -61,6 +63,12 @@ export const useXBeeStore = create<XBeeStore>()(
             uplink: null,
             downlink: null,
             lastUpdate: null,
+          },
+          rssiPolling: {
+            isActive: false,
+            interval: 5000, // 5 seconds default
+            lastPollTime: null,
+            timerId: null,
           },
         },
 
@@ -100,6 +108,7 @@ export const useXBeeStore = create<XBeeStore>()(
         ...frameProcessingActions,
         ...transmissionActions,
         ...activityActions,
+        ...systemActions,
       };
     })
   )

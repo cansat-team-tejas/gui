@@ -21,7 +21,7 @@ const LogTab = () => {
           <LabelValue
             label="SEARCH"
             containerClassName="grid grid-cols-1 gap-1"
-            labelClassName="text-[10px] font-bold"
+            labelClassName="text-[10px] font-bold min-w-[140px] max-w-[140px]"
           >
             <div className="border border-black bg-white px-2 py-1 h-[25px] flex items-center min-w-[250px]">
               <input
@@ -37,7 +37,7 @@ const LogTab = () => {
           <LabelValue
             label="FILTERS"
             containerClassName="grid grid-cols-1 gap-1"
-            labelClassName="text-[10px] font-bold"
+            labelClassName="text-[10px] font-bold min-w-[140px] max-w-[140px]"
           >
             <div className="flex items-center gap-2">
               <label className="flex items-center gap-1 text-[10px] font-bold">

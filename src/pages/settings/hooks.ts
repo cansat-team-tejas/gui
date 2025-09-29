@@ -5,8 +5,13 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { SettingsState, CustomCommandFormData, QnhFormData } from "./types";
-import { customCommandSchema, qnhSchema } from "./schemas";
+import { SettingsState } from "./types";
+import {
+  CustomCommandFormData,
+  customCommandSchema,
+  QnhFormData,
+  qnhSchema,
+} from "./schemas";
 import { QNH_DEFAULTS, TIMEOUTS } from "./constants";
 import {
   useScanPorts,
@@ -15,6 +20,7 @@ import {
   useSetSelectedPort,
   useTransmit,
 } from "../../hooks/use-xbee";
+import { useXBeeStore } from "../../store/xbee";
 
 export const useSettingsState = (): SettingsState & {
   setIsScanning: (scanning: boolean) => void;
@@ -99,7 +105,6 @@ export const usePortScanning = (
     }
   };
 
-  // Scan for ports on hook initialization
   useEffect(() => {
     handleScanPorts();
   }, []);
@@ -150,14 +155,47 @@ export const useCommandManagement = (
   settingsState: ReturnType<typeof useSettingsState>
 ) => {
   const { transmit } = useSettingsActions();
+  const resetStore = useXBeeStore((state) => state.resetStore);
+
+  // Commands that should trigger GUI reset when sent to CanSat
+  // Only commands that actually restart/reset the CanSat mission
+  const RESET_TRIGGERING_COMMANDS = [
+    "START", // Start new mission
+    "RESET", // Reset request (from log file)
+    "RESET_CONFIRM", // Reset confirmation (from log file)
+    "SHUTDOWN", // Shutdown system (mission end)
+  ];
 
   const handleSendCommand = async (command: string) => {
     if (!command.trim()) return;
 
     try {
+      // Special handling for START command - reset GUI first
+      if (command === "START") {
+        resetStore();
+        settingsState.setCommandStatus("GUI reset for new mission");
+
+        // Small delay to let reset complete, then send command
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      }
+
       const success = await transmit(command);
       if (success) {
         settingsState.setCommandStatus(`Command sent: ${command}`);
+
+        // Check if other reset commands should trigger GUI reset (after sending)
+        if (
+          RESET_TRIGGERING_COMMANDS.includes(command) &&
+          command !== "START"
+        ) {
+          // Reset the GUI store for other reset commands
+          setTimeout(() => {
+            resetStore();
+            settingsState.setCommandStatus(
+              `GUI reset triggered by: ${command}`
+            );
+          }, 500); // Small delay to ensure command is sent first
+        }
       } else {
         settingsState.setCommandStatus("Failed to send command");
       }

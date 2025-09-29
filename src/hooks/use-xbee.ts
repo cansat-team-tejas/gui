@@ -112,6 +112,8 @@ export const useMissionDuration = () =>
   useXBeeStore((state) => state.telemetry.totalMissionTime);
 export const useMissionPacketsReceived = () =>
   useXBeeStore((state) => state.statistics.packetsReceived);
+export const useMissionPacketsSent = () =>
+  useXBeeStore((state) => state.statistics.packetsSent);
 export const useMissionDataRate = () =>
   useXBeeStore((state) => state.telemetry.dataRate);
 export const useMissionStartTime = () =>

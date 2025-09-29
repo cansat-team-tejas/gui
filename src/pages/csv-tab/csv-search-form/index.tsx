@@ -5,9 +5,12 @@ import Button from "../../../components/button";
 import LabelValue from "../../../components/label-value";
 import { useMemo } from "react";
 import { columns } from "../../../data/csv-data";
-import type { CsvSearchFormData } from "../../../schemas/forms";
 
-const SearchForm = () => {
+interface SearchFormProps {
+  sortingToggle?: React.ReactNode;
+}
+
+const SearchForm = ({ sortingToggle }: SearchFormProps = {}) => {
   const { reset } = useFormContext();
 
   const TABLE_COLUMNS_OPTIONS = useMemo(
@@ -32,7 +35,7 @@ const SearchForm = () => {
       <LabelValue
         label="SEARCH TERM"
         containerClassName="grid grid-cols-1 gap-1"
-        labelClassName="text-[10px] font-bold"
+        labelClassName="text-[10px] font-bold min-w-[140px] max-w-[140px]"
       >
         <RhfTextField
           name="searchTerm"
@@ -44,7 +47,7 @@ const SearchForm = () => {
       <LabelValue
         label="SEARCH COLUMN"
         containerClassName="grid grid-cols-1 gap-1"
-        labelClassName="text-[10px] font-bold"
+        labelClassName="text-[10px] font-bold min-w-[140px] max-w-[140px]"
       >
         <RhfDropdown
           name="searchColumn"
@@ -53,13 +56,14 @@ const SearchForm = () => {
         />
       </LabelValue>
 
-      <div className="flex gap-1">
+      <div className="flex gap-1 items-center">
         <Button onClick={handleClear} variant="warning">
           CLEAR
         </Button>
         <Button onClick={handleExport} variant="success">
           EXPORT
         </Button>
+        {sortingToggle && <div className="ml-2">{sortingToggle}</div>}
       </div>
     </div>
   );

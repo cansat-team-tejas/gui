@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import Button from "../button";
+import ConfirmationDialog from "../confirmation-dialog";
+import { useXBeeStore } from "../../store/xbee";
 
 interface GuiResetButtonProps {
   className?: string;
@@ -10,6 +12,7 @@ export const GuiResetButton: React.FC<GuiResetButtonProps> = ({
 }) => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const resetStore = useXBeeStore((state) => state.resetStore);
 
   const handleReset = () => {
     setShowConfirm(true);
@@ -19,65 +22,47 @@ export const GuiResetButton: React.FC<GuiResetButtonProps> = ({
     setIsResetting(true);
 
     try {
+      // Reset the Zustand store state
+      resetStore();
+
       // Clear all localStorage data
       localStorage.clear();
 
       // Clear sessionStorage data
       sessionStorage.clear();
-
-      // Reset application state by reloading
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
     } catch (error) {
       console.error("Failed to reset GUI:", error);
-      setIsResetting(false);
-      setShowConfirm(false);
     }
-  };
 
-  const handleCancel = () => {
+    setIsResetting(false);
     setShowConfirm(false);
   };
 
-  if (showConfirm) {
-    return (
-      <div className={`space-y-2 ${className}`}>
-        <div className="text-[10px] font-bold text-red-600 text-center">
-          CONFIRM RESET
-        </div>
-        <div className="text-[9px] text-gray-700 text-center mb-2">
-          This will clear all data and reload the application.
-        </div>
-        <div className="flex gap-2">
-          <Button
-            onClick={handleConfirmReset}
-            variant="warning"
-            disabled={isResetting}
-            className="flex-1 text-[9px] h-[25px]"
-          >
-            {isResetting ? "RESETTING..." : "CONFIRM"}
-          </Button>
-          <Button
-            onClick={handleCancel}
-            variant="default"
-            disabled={isResetting}
-            className="flex-1 text-[9px] h-[25px]"
-          >
-            CANCEL
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  const handleCancelReset = () => {
+    setShowConfirm(false);
+  };
 
   return (
-    <Button
-      onClick={handleReset}
-      variant="warning"
-      className={`w-full text-[10px] h-[25px] ${className}`}
-    >
-      RESET GUI
-    </Button>
+    <>
+      <Button
+        onClick={handleReset}
+        variant="warning"
+        className={`w-full text-[10px] h-[25px] ${className}`}
+        disabled={isResetting}
+      >
+        {isResetting ? "RESETTING..." : "RESET GUI"}
+      </Button>
+
+      <ConfirmationDialog
+        isOpen={showConfirm}
+        title="RESET GUI DATA"
+        message="This will clear all telemetry history, logs, statistics, and application data. The application will be reset to its initial state. This action cannot be undone."
+        confirmText={isResetting ? "RESETTING..." : "Reset GUI"}
+        cancelText="Cancel"
+        isDangerous={true}
+        onConfirm={handleConfirmReset}
+        onCancel={handleCancelReset}
+      />
+    </>
   );
 };

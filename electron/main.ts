@@ -15,7 +15,6 @@ const xbeeApiOptions = {
   api_mode: 2,
   module: "ZigBee",
 };
-const C = xbeeApi.constants;
 
 // -- Electron Window Setup (unchanged) --
 function createWindow(): void {
@@ -146,12 +145,29 @@ ipcMain.handle("serial:open", async (event, portPath: string, options: any) => {
     xbee.builder.pipe(activeSerialPort!);
 
     xbee.parser.on("data", (frame: any) => {
-      // Convert Buffer to string if present
-      if (frame.data && Buffer.isBuffer(frame.data)) {
-        frame.data = frame.data.toString();
+      // Handle different frame types appropriately
+      if (frame.type === 0x88) {
+        // AT Response frame - keep structured data
+        mainWindow?.webContents.send("xbee:frame-received", {
+          type: "AT_RESPONSE",
+          frameType: frame.type,
+          frameId: frame.id,
+          command: frame.command,
+          status: frame.commandStatus,
+          value: frame.commandData
+            ? frame.commandData.length === 1
+              ? frame.commandData[0]
+              : frame.commandData
+            : null,
+          timestamp: new Date(),
+        });
+      } else {
+        // Other frames (telemetry data) - convert to string
+        if (frame.data && Buffer.isBuffer(frame.data)) {
+          frame.data = frame.data.toString();
+        }
+        mainWindow?.webContents.send("xbee:frame-received", frame);
       }
-
-      mainWindow?.webContents.send("xbee:frame-received", frame);
     });
     activeSerialPort!.on("error", (err) => {
       mainWindow?.webContents.send("serial:error", err?.message || String(err));

@@ -1,5 +1,8 @@
 import { ICanSatTelemetryData, getFlightStateName } from "../../data/csv-data";
-import { parseLogMessage } from "../../constants/log-constants";
+import {
+  parseLogMessage,
+  getLogDisplayMessage,
+} from "../../constants/log-constants";
 
 interface CsvTableCellProps {
   value: any;
@@ -63,16 +66,39 @@ const CsvTableCell: React.FC<CsvTableCellProps> = ({ value, fieldName }) => {
         return val.toFixed(2);
 
       case "AIR_QUALITY_PPM":
+      case "AQ_CO_PPM":
+      case "AQ_CH4_PPM":
+      case "AQ_NH3_PPM":
+      case "AQ_H2_PPM":
+      case "AQ_ETHANOL_PPM":
         return `${val.toFixed(1)}ppm`;
+
+      case "MCU_TEMP_C":
+        return `${val.toFixed(1)}°C`;
+
+      case "HEALTH_FLAGS":
+        return `0x${val.toString(16).toUpperCase().padStart(4, "0")}`;
 
       case "LOG_DATA":
         if (!val || val === "") return "";
         const parsedLog = parseLogMessage(val);
         if (parsedLog.isSystemLog) {
-          return (
-            parsedLog.meaning.substring(0, 30) +
-            (parsedLog.meaning.length > 30 ? "..." : "")
-          );
+          if ((parsedLog as any).isMultiEntry) {
+            const entryCount = (parsedLog as any).entries?.length || 0;
+            // Show a clean summary for multi-entry logs
+            const categories = parsedLog.meaning
+              .split(" | ")
+              .map((cat) => cat.split(":")[0].trim())
+              .join(", ");
+            return `${entryCount} Events: ${categories}`;
+          } else {
+            // Show GUI-friendly display message
+            const displayMsg = getLogDisplayMessage(parsedLog.symbol || "");
+            return (
+              displayMsg.substring(0, 35) +
+              (displayMsg.length > 35 ? "..." : "")
+            );
+          }
         }
         return (
           val.toString().substring(0, 20) +

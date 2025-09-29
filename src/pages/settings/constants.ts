@@ -9,10 +9,12 @@ export const SYSTEM_CONTROL_COMMANDS: Command[] = [
   { label: "STATUS", command: "STATUS" },
   { label: "START", command: "START" },
   { label: "SHUTDOWN", command: "SHUTDOWN" },
+  { label: "RESET", command: "RESET" },
 ];
 
 export const EMERGENCY_COMMANDS: Command[] = [
   { label: "EMERGENCY", command: "EMERGENCY" },
+  { label: "RESET CONFIRM", command: "RESET_CONFIRM" },
 ];
 
 export const CALIBRATION_COMMANDS: Command[] = [

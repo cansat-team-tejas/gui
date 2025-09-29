@@ -1,7 +1,10 @@
 import React, { useEffect, useRef } from "react";
 import { useXBeeStore, xbeeSelectors } from "../../store/xbee";
 import type { ICommandType, ILogEntryType } from "../../types/telemetry";
-import { parseLogMessage } from "../../constants/log-constants";
+import {
+  parseLogMessage,
+  getLogDisplayMessage,
+} from "../../constants/log-constants";
 
 interface PacketStreamViewProps {
   searchTerm?: string;
@@ -179,25 +182,68 @@ const PacketStreamView: React.FC<PacketStreamViewProps> = ({
                       const parsedLog = parseLogMessage(message);
 
                       return (
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           {parsedLog.isSystemLog ? (
                             <>
-                              <div className="flex items-center gap-2">
-                                <span
-                                  className={`px-2 py-1 rounded text-[9px] font-bold ${getCategoryColor(
-                                    parsedLog.category
-                                  )}`}
-                                >
-                                  {parsedLog.category.replace("_", " ")}
-                                </span>
-                                <span className="text-[10px] text-gray-600 font-mono">
-                                  Symbol: {parsedLog.symbol} | Time:{" "}
-                                  {parsedLog.timestamp}
+                              {/* Header with symbol and timestamp info */}
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <span
+                                    className={`px-2 py-1 rounded text-[9px] font-bold ${getCategoryColor(
+                                      parsedLog.category
+                                    )}`}
+                                  >
+                                    {parsedLog.category.replace("_", " ")}
+                                  </span>
+                                  <span className="text-[10px] text-gray-600 font-mono">
+                                    Symbol: {parsedLog.symbol}
+                                  </span>
+                                </div>
+                                <span className="text-[10px] text-gray-500 font-mono">
+                                  Time: {parsedLog.timestamp}
                                 </span>
                               </div>
-                              <div className="text-[11px] font-semibold text-gray-900 leading-tight">
-                                {parsedLog.meaning}
+
+                              {/* Main meaning display */}
+                              <div className="text-[11px] font-semibold text-gray-900 leading-relaxed">
+                                {(parsedLog as any).isMultiEntry ? (
+                                  <div className="space-y-1">
+                                    <div className="text-[10px] font-bold text-blue-700 mb-2">
+                                      📋 System Event Sequence (
+                                      {(parsedLog as any).entries?.length || 0}{" "}
+                                      events)
+                                    </div>
+                                    {parsedLog.meaning
+                                      .split(" | ")
+                                      .map((categoryGroup, idx) => (
+                                        <div
+                                          key={idx}
+                                          className="pl-4 border-l-2 border-gray-200"
+                                        >
+                                          <div className="text-[10px] font-medium text-gray-800">
+                                            {categoryGroup}
+                                          </div>
+                                        </div>
+                                      ))}
+                                  </div>
+                                ) : (
+                                  <div>
+                                    {getLogDisplayMessage(
+                                      parsedLog.symbol || ""
+                                    )}
+                                  </div>
+                                )}
                               </div>
+
+                              {/* Show raw message as expandable detail */}
+                              <details className="text-[9px] text-gray-500">
+                                <summary className="cursor-pointer hover:text-gray-700">
+                                  Raw Message
+                                </summary>
+                                <div className="mt-1 font-mono bg-gray-50 p-2 rounded text-[8px] border">
+                                  {parsedLog.originalMessage}
+                                </div>
+                              </details>
                             </>
                           ) : (
                             <div className="text-[11px] font-semibold text-gray-900 leading-tight">

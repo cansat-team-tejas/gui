@@ -43,17 +43,93 @@ export const createCommunicationActions = (
       state.communication.rssi.lastUpdate = new Date();
     }),
 
-  getRSSI: async () => {
+  getRSSI: () => {
+    const { communication } = get();
+    return {
+      uplink: communication.rssi.uplink,
+      downlink: communication.rssi.downlink,
+    };
+  },
+
+  sendATCommand: async (command: string) => {
     try {
-      // For now, extract RSSI from telemetry data if available
-      const { communication } = get();
-      return {
-        uplink: communication.rssi.uplink,
-        downlink: communication.rssi.downlink,
+      if (!window.electronAPI?.xbee || !get().connection.isConnected) {
+        return false;
+      }
+
+      // Create AT command frame
+      const frame = {
+        type: 0x08, // AT Command frame type
+        id: Math.floor(Math.random() * 255) + 1,
+        command: command,
+        commandParameter: new Uint8Array([]), // No parameters for basic commands
       };
+
+      const result = await window.electronAPI.xbee.sendFrame(frame);
+
+      if (result.success) {
+        set((state: XBeeStore) => {
+          state.statistics.packetsSent += 1;
+        });
+        get().addActivity("FRAME_SENT", "AT_COMMAND", `AT${command}`);
+        return true;
+      }
+      return false;
     } catch (error) {
-      console.error("Failed to get RSSI:", error);
-      return { uplink: null, downlink: null };
+      get().addActivity("ERROR", undefined, `AT command failed: ${command}`);
+      return false;
     }
+  },
+
+  startRSSIPolling: (intervalMs: number = 5000) => {
+    const store = get();
+
+    // Stop any existing polling
+    if (store.communication.rssiPolling.timerId) {
+      clearInterval(store.communication.rssiPolling.timerId);
+    }
+
+    // Start polling for downlink RSSI only (uplink comes from telemetry)
+    const pollDownlinkRSSI = async () => {
+      try {
+        await store.sendATCommand("DB"); // Get downlink RSSI only
+
+        set((state: XBeeStore) => {
+          state.communication.rssiPolling.lastPollTime = new Date();
+        });
+      } catch (error) {
+        // Silent fail - RSSI polling is non-critical
+      }
+    };
+
+    const timerId = setInterval(pollDownlinkRSSI, intervalMs);
+
+    set((state: XBeeStore) => {
+      state.communication.rssiPolling.isActive = true;
+      state.communication.rssiPolling.interval = intervalMs;
+      state.communication.rssiPolling.timerId = timerId;
+    });
+
+    // Initial poll
+    pollDownlinkRSSI();
+
+    get().addActivity(
+      "CONNECTION",
+      undefined,
+      `Started RSSI polling (${intervalMs}ms)`
+    );
+  },
+
+  stopRSSIPolling: () => {
+    set((state: XBeeStore) => {
+      if (state.communication.rssiPolling.timerId) {
+        clearInterval(state.communication.rssiPolling.timerId);
+        state.communication.rssiPolling.timerId = null;
+      }
+      state.communication.rssiPolling.isActive = false;
+      state.communication.rssiPolling.lastPollTime = null;
+    });
+
+    get().addActivity("CONNECTION", undefined, "Stopped RSSI polling");
   },
 });

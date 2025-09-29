@@ -21,9 +21,9 @@ export const SmallFont = ({
 const LabelValue = ({
   label,
   children,
-  labelClassName = "font-bold text-[12px]",
+  labelClassName = "font-bold text-[12px] min-w-[120px] max-w-[120px]",
   valueClassName = "font-bold text-[14px]",
-  containerClassName = "grid grid-cols-2 gap-4 px-2 py-[2px] min-h-[20px] items-center",
+  containerClassName = "flex gap-4 px-2 py-[2px] min-h-[20px] items-center hover:bg-gray-50 transition-colors",
 }: ILabelValueType) => (
   <div className={containerClassName}>
     <span className={labelClassName}>{label}:</span>

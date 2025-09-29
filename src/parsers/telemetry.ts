@@ -1,18 +1,17 @@
 import { TELEMETRY_CONSTANTS } from "../constants";
-import { validateTelemetryData } from "../validation/telemetry";
-import type { TelemetryDataType } from "../validation/telemetry";
+import type { ITelemetryType } from "../types/telemetry";
 
 /**
  * Modular telemetry data parser
- * Handles CSV parsing with validation
+ * Handles CSV parsing for new 41-field telemetry schema
  */
 export class TelemetryParser {
   private static readonly CSV_FIELD_COUNT = TELEMETRY_CONSTANTS.CSV_FIELD_COUNT;
 
   /**
-   * Parse CSV telemetry data efficiently with validation
+   * Parse CSV telemetry data efficiently with the updated schema
    */
-  static parseTelemetryData(csvData: string): TelemetryDataType | null {
+  static parseTelemetryData(csvData: string): ITelemetryType | null {
     try {
       // Remove any trailing LOG entries from the CSV line
       const cleanCsv = csvData.split(",[")[0]; // Split at LOG pattern
@@ -34,74 +33,74 @@ export class TelemetryParser {
         return value ? value.trim() : fallback;
       };
 
-      const telemetryData = {
+      const telemetryData: ITelemetryType = {
         // Core identifiers and timing
-        teamId: parseString(fields[0], "UNKNOWN"),
-        missionTime: parseFloat(fields[1]),
-        packetCount: parseFloat(fields[2]),
+        TEAM_ID: parseString(fields[0], "046"),
+        MISSION_TIME_S: parseFloat(fields[1]),
+        PACKET_COUNT: parseFloat(fields[2]),
 
         // Environmental sensors
-        altitude: parseFloat(fields[3]),
-        pressure: parseFloat(fields[4]),
-        temperature: parseFloat(fields[5]),
-        voltage: parseFloat(fields[6]),
+        ALTITUDE: parseFloat(fields[3]),
+        PRESSURE: parseFloat(fields[4]),
+        TEMP: parseFloat(fields[5]),
+        VOLTAGE: parseFloat(fields[6]),
 
         // GPS data
-        latitude: parseFloat(fields[7]),
-        longitude: parseFloat(fields[8]),
-        gpsAltitude: parseFloat(fields[9]),
-        satellites: parseFloat(fields[10]),
+        LATITUDE: parseFloat(fields[7]),
+        LONGITUDE: parseFloat(fields[8]),
+        GPS_ALTITUDE: parseFloat(fields[9]),
+        SATELLITES: parseFloat(fields[10]),
 
         // Accelerometer data
-        accelX: parseFloat(fields[11]),
-        accelY: parseFloat(fields[12]),
-        accelZ: parseFloat(fields[13]),
+        ACCEL_X: parseFloat(fields[11]),
+        ACCEL_Y: parseFloat(fields[12]),
+        ACCEL_Z: parseFloat(fields[13]),
 
         // Gyroscope data
-        gyroX: parseFloat(fields[14]),
-        gyroY: parseFloat(fields[15]),
-        gyroZ: parseFloat(fields[16]),
+        GYRO_X: parseFloat(fields[14]),
+        GYRO_Y: parseFloat(fields[15]),
+        GYRO_Z: parseFloat(fields[16]),
 
         // Orientation data
-        roll: parseFloat(fields[17]),
-        pitch: parseFloat(fields[18]),
-        yaw: parseFloat(fields[19]),
+        ROLL: parseFloat(fields[17]),
+        PITCH: parseFloat(fields[18]),
+        YAW: parseFloat(fields[19]),
 
         // Flight dynamics
-        gyroSpinRate: parseFloat(fields[20]),
-        flightState: parseFloat(fields[21]),
+        GYRO_SPIN: parseFloat(fields[20]),
+        FLIGHT_STATE: parseFloat(fields[21]),
 
         // Power systems
-        current: parseFloat(fields[22]),
-        power: parseFloat(fields[23]),
+        CURRENT: parseFloat(fields[22]),
+        POWER: parseFloat(fields[23]),
 
         // Magnetometer data
-        magX: parseFloat(fields[24]),
-        magY: parseFloat(fields[25]),
-        magZ: parseFloat(fields[26]),
+        MAG_X: parseFloat(fields[24]),
+        MAG_Y: parseFloat(fields[25]),
+        MAG_Z: parseFloat(fields[26]),
 
         // Environmental sensors (additional)
-        humidity: parseFloat(fields[27]),
-        airQualityRaw: parseFloat(fields[28]),
-        airQualityPpm: parseFloat(fields[29]),
-        baroAltitude: parseFloat(fields[30]),
-        rssiDbm: parseFloat(fields[31]),
+        HUMIDITY: parseFloat(fields[27]),
+        AIR_QUALITY_RAW: parseFloat(fields[28]),
+        AIR_QUALITY_PPM: parseFloat(fields[29]),
+        BARO_ALTITUDE: parseFloat(fields[30]),
+        RSSI_DBM: parseFloat(fields[31]),
+
+        // New air quality gases
+        AQ_CO_PPM: parseFloat(fields[32]),
+        AQ_CH4_PPM: parseFloat(fields[33]),
+        AQ_NH3_PPM: parseFloat(fields[34]),
+        AQ_H2_PPM: parseFloat(fields[35]),
+        AQ_ETHANOL_PPM: parseFloat(fields[36]),
+        MCU_TEMP_C: parseFloat(fields[37]),
+        HEALTH_FLAGS: parseFloat(fields[38]),
 
         // Communication data
-        cmdEcho: parseString(fields[32]),
-        logData: parseString(fields[33]),
+        CMD_ECHO: parseString(fields[39]),
+        LOG_DATA: parseString(fields[40]),
       };
 
-      // Validate the parsed data with Zod
-      const validation = validateTelemetryData(telemetryData);
-
-      if (!validation.isValid) {
-        console.warn("Telemetry validation failed:", validation.errors);
-        // Log validation errors but still return data for debugging
-        return telemetryData as TelemetryDataType;
-      }
-
-      return validation.data;
+      return telemetryData;
     } catch (error) {
       console.error("Failed to parse telemetry data:", error, csvData);
       return null;

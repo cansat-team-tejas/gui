@@ -1,6 +1,6 @@
 // Table configuration constants
 export const TABLE_CONFIG = {
-  VISIBLE_ROWS_THRESHOLD: 1000,
+  VISIBLE_ROWS_THRESHOLD: 100, // Lowered for easier testing
   BATCH_SIZE: 50,
   COLUMN_MIN_WIDTH: 140,
   HEADER_HEIGHT: 30,

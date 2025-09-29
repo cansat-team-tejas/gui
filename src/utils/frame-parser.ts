@@ -123,8 +123,17 @@ export class FrameParser {
         BARO_ALTITUDE: parseFloat(fields[30]), // baro_altitude
         RSSI_DBM: parseFloat(fields[31]), // rssi_dbm
 
-        CMD_ECHO: parseString(fields[32]), // cmd_echo.c_str()
-        LOG_DATA: parseString(fields[33]), // log_data.c_str()
+        // New fields per updated firmware schema
+        AQ_CO_PPM: parseFloat(fields[32]), // aq_co_ppm
+        AQ_CH4_PPM: parseFloat(fields[33]), // aq_ch4_ppm
+        AQ_NH3_PPM: parseFloat(fields[34]), // aq_nh3_ppm
+        AQ_H2_PPM: parseFloat(fields[35]), // aq_h2_ppm
+        AQ_ETHANOL_PPM: parseFloat(fields[36]), // aq_ethanol_ppm
+        MCU_TEMP_C: parseFloat(fields[37]), // mcu_temp_c
+        HEALTH_FLAGS: parseFloat(fields[38]), // health_flags (unsigned long)
+
+        CMD_ECHO: parseString(fields[39]), // cmd_echo.c_str()
+        LOG_DATA: parseString(fields[40]), // log_data.c_str()
       };
 
       return TELEMETRY_DATA;

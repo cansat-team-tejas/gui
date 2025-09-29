@@ -1,5 +1,6 @@
 /**
  * XBee Store - Telemetry Actions
+ * Handles telemetry data processing and RSSI management
  */
 import type { ITelemetryType } from "../../types/telemetry";
 import type { XBeeStore, TelemetryActions } from "./types";
@@ -37,9 +38,9 @@ export const createTelemetryActions = (
       // Update statistics
       state.statistics.frameStats.telemetryCount += 1;
 
-      // Update RSSI if available in telemetry data
+      // Process uplink RSSI from CanSat (RSSI_DBM = uplink signal strength)
       if (data.RSSI_DBM !== undefined && data.RSSI_DBM !== null) {
-        state.communication.rssi.downlink = data.RSSI_DBM;
+        state.communication.rssi.uplink = data.RSSI_DBM;
         state.communication.rssi.lastUpdate = now;
       }
     }),

@@ -2,9 +2,10 @@
  * Settings Page - Main Component
  * Modular settings page with RHF and Zod validation
  */
-import React from "react";
 import { AutoConnectButton } from "../../components/auto-connect-button";
 import { GuiResetButton } from "../../components/gui-reset-button";
+import { RSSIPollingControl } from "../../components/rssi-polling-control";
+import Panel from "../../components/panel";
 import {
   useIsConnected,
   useAvailablePorts,
@@ -64,93 +65,83 @@ const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="bg-white flex flex-col w-full h-full overflow-hidden">
-      {/* Header */}
-      <div className="border-b border-black bg-[#D9D9D9] px-3 py-2">
-        <div className="text-[12px] font-bold">SYSTEM CONFIGURATION</div>
-      </div>
-
+    <div className="bg-gray-50 flex flex-col w-full h-full overflow-hidden">
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-3 space-y-3">
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="w-full space-y-6">
           {/* Connection Status Section */}
-          <div className="border border-black bg-white">
-            <div className="bg-[#D9D9D9] px-2 py-1 border-b border-black">
-              <div className="text-[10px] font-bold">CONNECTION STATUS</div>
-            </div>
-            <div className="p-2">
-              <ConnectionStatusComponent
-                connectionStatus={connectionStatus}
-                statusMessage={settingsState.connectionStatus}
-              />
-            </div>
-          </div>
+          <Panel title="CONNECTION STATUS" variant="default">
+            <ConnectionStatusComponent
+              connectionStatus={connectionStatus}
+              statusMessage={settingsState.connectionStatus}
+            />
+          </Panel>
 
           {/* Quick Actions Section */}
-          <div className="border border-black bg-white">
-            <div className="bg-[#D9D9D9] px-2 py-1 border-b border-black">
-              <div className="text-[10px] font-bold">QUICK ACTIONS</div>
-            </div>
-            <div className="p-2 space-y-2">
-              <div>
-                <div className="text-[9px] font-bold text-gray-600 mb-1">
-                  AUTO-DETECT XBEE
+          <Panel title="QUICK ACTIONS" variant="default">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <div>
+                  <div className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">
+                    Auto-Detect XBee
+                  </div>
+                  <AutoConnectButton />
                 </div>
-                <AutoConnectButton />
-              </div>
-              <div>
-                <div className="text-[9px] font-bold text-gray-600 mb-1">
-                  RESET APPLICATION
-                </div>
-                <GuiResetButton />
-              </div>
-            </div>
-          </div>
 
+                <div>
+                  <div className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">
+                    RSSI Monitoring
+                  </div>
+                  <RSSIPollingControl />
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <div className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">
+                    System Reset
+                  </div>
+                  <GuiResetButton className="w-full" />
+                </div>
+              </div>
+            </div>
+          </Panel>
           {/* Port Configuration Section */}
-          <div className="border border-black bg-white">
-            <div className="bg-[#D9D9D9] px-2 py-1 border-b border-black">
-              <div className="text-[10px] font-bold">PORT CONFIGURATION</div>
-            </div>
-            <div className="p-2">
-              <PortSelection
-                availablePorts={availablePorts}
-                selectedPort={selectedPort}
-                isConnected={isConnected}
-                isScanning={settingsState.isScanning}
-                onScanPorts={handleScanPorts}
-                onPortSelect={setSelectedPort}
-              />
-            </div>
-          </div>
+          <Panel title="PORT CONFIGURATION" variant="default">
+            <PortSelection
+              availablePorts={availablePorts}
+              selectedPort={selectedPort}
+              isConnected={isConnected}
+              isScanning={settingsState.isScanning}
+              onScanPorts={handleScanPorts}
+              onPortSelect={setSelectedPort}
+            />
+          </Panel>
 
           {/* Manual Connection Section */}
-          <div className="border border-black bg-white">
-            <div className="bg-[#D9D9D9] px-2 py-1 border-b border-black">
-              <div className="text-[10px] font-bold">MANUAL CONNECTION</div>
-            </div>
-            <div className="p-2">
-              <ConnectionControls
-                isConnected={isConnected}
-                selectedPort={selectedPort}
-                isConnecting={settingsState.isConnecting}
-                onConnect={handleConnect}
-                onDisconnect={handleDisconnect}
-              />
-            </div>
-          </div>
+          <Panel title="MANUAL CONNECTION" variant="default">
+            <ConnectionControls
+              isConnected={isConnected}
+              selectedPort={selectedPort}
+              isConnecting={settingsState.isConnecting}
+              onConnect={handleConnect}
+              onDisconnect={handleDisconnect}
+            />
+          </Panel>
 
           {/* Command Control Section */}
           {isConnected && (
-            <div className="border border-black bg-white">
-              <div className="bg-[#D9D9D9] px-2 py-1 border-b border-black">
-                <div className="text-[10px] font-bold">COMMAND CONTROL</div>
-              </div>
-              <div className="p-2 space-y-3">
+            <Panel
+              title="COMMAND CONTROL"
+              variant="default"
+              collapsible
+              defaultCollapsed
+            >
+              <div className="space-y-6">
                 {/* Custom Command Input */}
                 <div>
-                  <div className="text-[9px] font-bold text-gray-600 mb-2">
-                    CUSTOM COMMAND
+                  <div className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">
+                    Custom Command
                   </div>
                   <CustomCommandControl
                     commandStatus={settingsState.commandStatus}
@@ -158,58 +149,51 @@ const SettingsPage: React.FC = () => {
                   />
                 </div>
 
-                {/* System Control Commands */}
-                <div>
+                {/* Command Categories */}
+                <div className="grid grid-cols-1 gap-6">
                   <CommandCategory
                     title="SYSTEM CONTROL"
                     commands={SYSTEM_CONTROL_COMMANDS}
                     type="system"
                     onSendCommand={handleSendCommand}
                   />
-                </div>
 
-                {/* Emergency Commands */}
-                <div>
                   <CommandCategory
                     title="EMERGENCY"
                     commands={EMERGENCY_COMMANDS}
                     type="emergency"
                     onSendCommand={handleSendCommand}
                   />
-                </div>
 
-                {/* Calibration Commands */}
-                <div>
                   <CommandCategory
                     title="CALIBRATION"
                     commands={CALIBRATION_COMMANDS}
                     type="calibration"
                     onSendCommand={handleSendCommand}
                   />
-                </div>
 
-                {/* Flight Control Commands */}
-                <div>
-                  <div className="text-[9px] font-bold text-gray-600 mb-2">
-                    FLIGHT CONTROL
+                  {/* Flight Control Commands */}
+                  <div>
+                    <div className="text-xs font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+                      Flight Control
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {FLIGHT_CONTROL_COMMANDS.map((cmd, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleSendCommand(cmd.command)}
+                          className="bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded px-3 py-2 text-xs font-medium text-gray-700 transition-colors duration-150"
+                          title={cmd.command}
+                        >
+                          {cmd.label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="mt-3">
+                      <QnhControl onQnhSet={handleQnhSet} />
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {FLIGHT_CONTROL_COMMANDS.map((cmd, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleSendCommand(cmd.command)}
-                        className="bg-[rgba(217,217,217,0.5)] border border-[rgba(0,0,0,0.58)] rounded-[2px] px-2 py-[6px] h-[32px] w-[131px] text-[13px] font-medium text-[rgba(0,0,0,0.65)] hover:bg-[rgba(217,217,217,0.8)] transition-colors"
-                        title={cmd.command}
-                      >
-                        {cmd.label}
-                      </button>
-                    ))}
-                    <QnhControl onQnhSet={handleQnhSet} />
-                  </div>
-                </div>
 
-                {/* SD Card Management */}
-                <div>
                   <CommandCategory
                     title="SD CARD"
                     commands={SD_CARD_COMMANDS}
@@ -218,7 +202,7 @@ const SettingsPage: React.FC = () => {
                   />
                 </div>
               </div>
-            </div>
+            </Panel>
           )}
         </div>
       </div>

@@ -15,9 +15,30 @@ export const createConnectionActions = (
       if (connected) {
         state.connection.connectionTime = new Date();
         get().addActivity("CONNECTION", undefined, "Connected to XBee");
+
+        // Auto-start RSSI polling when connected
+        setTimeout(() => {
+          const store = get();
+          if (
+            store.connection.isConnected &&
+            !store.communication.rssiPolling.isActive
+          ) {
+            store.startRSSIPolling(5000); // 5-second interval
+          }
+        }, 2000); // Wait 2 seconds after connection
       } else {
         state.connection.connectionTime = null;
         get().addActivity("CONNECTION", undefined, "Disconnected from XBee");
+
+        // Stop RSSI polling when disconnected
+        if (state.communication.rssiPolling.isActive) {
+          if (state.communication.rssiPolling.timerId) {
+            clearInterval(state.communication.rssiPolling.timerId);
+            state.communication.rssiPolling.timerId = null;
+          }
+          state.communication.rssiPolling.isActive = false;
+          state.communication.rssiPolling.lastPollTime = null;
+        }
       }
     }),
 

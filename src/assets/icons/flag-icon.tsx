@@ -11,7 +11,7 @@ const FlagIcon = (props: IFlagIconType) => {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <g clip-path="url(#clip0_93_4)">
+      <g clipPath="url(#clip0_93_4)">
         <path d="M0 0H72V48H0V0Z" fill="white" />
         <path d="M0 0H72V16H0V0Z" fill="#F15B25" />
         <path d="M0 32H72V48H0V32Z" fill="#006934" />

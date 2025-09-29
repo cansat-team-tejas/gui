@@ -55,6 +55,12 @@ export interface CommunicationState {
     downlink: number | null;
     lastUpdate: Date | null;
   };
+  rssiPolling: {
+    isActive: boolean;
+    interval: number; // milliseconds
+    lastPollTime: Date | null;
+    timerId: NodeJS.Timeout | null;
+  };
 }
 
 export interface ConnectionState {
@@ -96,7 +102,10 @@ export interface CommunicationActions {
   getRecentLogs: (count?: number) => ILogEntryType[];
   getRecentCommands: (count?: number) => ICommandType[];
   updateRSSI: (uplink?: number, downlink?: number) => void;
-  getRSSI: () => Promise<{ uplink: number | null; downlink: number | null }>;
+  getRSSI: () => { uplink: number | null; downlink: number | null };
+  startRSSIPolling: (intervalMs?: number) => void;
+  stopRSSIPolling: () => void;
+  sendATCommand: (command: string) => Promise<boolean>;
 }
 
 export interface ConnectionActions {
@@ -112,6 +121,7 @@ export interface ConnectionActions {
 
 export interface FrameProcessingActions {
   processFrame: (raw: string) => void;
+  processATResponse: (frame: any) => void;
   resetProcessingStats: () => void;
 }
 
@@ -152,7 +162,10 @@ export interface XBeeStore {
   getRecentLogs: (count?: number) => ILogEntryType[];
   getRecentCommands: (count?: number) => ICommandType[];
   updateRSSI: (uplink?: number, downlink?: number) => void;
-  getRSSI: () => Promise<{ uplink: number | null; downlink: number | null }>;
+  getRSSI: () => { uplink: number | null; downlink: number | null };
+  startRSSIPolling: (intervalMs?: number) => void;
+  stopRSSIPolling: () => void;
+  sendATCommand: (command: string) => Promise<boolean>;
 
   setConnected: (connected: boolean) => void;
   setAvailablePorts: (ports: any[]) => void;
@@ -164,6 +177,7 @@ export interface XBeeStore {
   setAutoDetecting: (detecting: boolean) => void;
 
   processFrame: (raw: string) => void;
+  processATResponse: (frame: any) => void;
   resetProcessingStats: () => void;
 
   transmit: (data: string) => Promise<boolean>;
@@ -174,4 +188,6 @@ export interface XBeeStore {
     details?: string
   ) => void;
   clearActivityLog: () => void;
+
+  resetStore: () => void;
 }

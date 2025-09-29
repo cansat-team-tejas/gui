@@ -5,7 +5,7 @@ const CSVTabIcon = () => (
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
   >
-    <g clip-path="url(#clip0_94_142)">
+    <g clipPath="url(#clip0_94_142)">
       <path d="M10 4H2V20H22V6H12L10 4Z" fill="currentColor" />
     </g>
     <defs>

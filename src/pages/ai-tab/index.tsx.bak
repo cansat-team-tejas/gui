@@ -1,0 +1,437 @@
+// Clean AI Tab componentimport React, { useCallback } from "react";import React, { useCallback } from "react";
+
+export default function AITab() {
+
+  return <div>AI Tab Loading...</div>;import ChatHeader from "./components/chat-header";import ChatHeader from "./components/chat-header";
+
+}
+import ChatMessages from "./components/chat-messages";import ChatMessages from "./components/chat-messages";
+
+import ChatInput from "./components/chat-input";import ChatInput from "./components/chat-input";
+
+import QuickActions from "./components/quick-actions";import QuickActions from "./components/quick-actions";
+
+import { useMissionContext } from "./hooks/use-mission-context";import { useMissionContext } from "./hooks/use-mission-context";
+
+import { useAIService } from "./hooks/use-ai-service";import { useAIService } from "./hooks/use-ai-service";
+
+import { useChatMessages } from "./hooks/use-chat-messages";import { useChatMessages } from "./hooks/use-chat-messages";
+
+
+
+const AITab: React.FC = () => {const AITab: React.FC = () => {
+
+  const missionContext = useMissionContext();  const missionContext = useMissionContext();
+
+  const { processAIResponse } = useAIService();  const { processAIResponse } = useAIService();
+
+  const {  const {
+
+    messages,    messages,
+
+    isProcessing,    isProcessing,
+
+    setIsProcessing,    setIsProcessing,
+
+    addUserMessage,    addUserMessage,
+
+    addAIMessage,    addAIMessage,
+
+    addErrorMessage,    addErrorMessage,
+
+  } = useChatMessages();  } = useChatMessages();
+
+
+
+  const handleSendMessage = useCallback(async (message: string) => {  const handleSendMessage = useCallback(async (message: string) => {
+
+    addUserMessage(message);    addUserMessage(message);
+
+    setIsProcessing(true);    setIsProcessing(true);
+
+
+
+    try {    try {
+
+      const { response, commandExecuted } = await processAIResponse(message, missionContext);      const { response, commandExecuted } = await processAIResponse(message, missionContext);
+
+      addAIMessage(response, commandExecuted);      addAIMessage(response, commandExecuted);
+
+    } catch (error) {    } catch (error) {
+
+      console.error('AI processing error:', error);      console.error('AI processing error:', error);
+
+      addErrorMessage();      addErrorMessage();
+
+    } finally {    } finally {
+
+      setIsProcessing(false);      setIsProcessing(false);
+
+    }    }
+
+  }, [missionContext, processAIResponse, addUserMessage, addAIMessage, addErrorMessage, setIsProcessing]);  }, [missionContext, processAIResponse, addUserMessage, addAIMessage, addErrorMessage, setIsProcessing]);
+
+
+
+  const handleQuickAction = useCallback((action: string) => {  const handleQuickAction = useCallback((action: string) => {
+
+    if (!isProcessing) {    if (!isProcessing) {
+
+      handleSendMessage(action);      handleSendMessage(action);
+
+    }    }
+
+  }, [handleSendMessage, isProcessing]);  }, [handleSendMessage, isProcessing]);
+
+
+
+  return (  return (
+
+    <div className="h-full flex flex-col bg-white">    <div className="h-full flex flex-col bg-white">
+
+      <ChatHeader       <ChatHeader 
+
+        isConnected={missionContext.isConnected}         isConnected={missionContext.isConnected} 
+
+        messageCount={messages.length - 1}         messageCount={messages.length - 1} 
+
+      />      />
+
+            
+
+      <ChatMessages       <ChatMessages 
+
+        messages={messages}         messages={messages} 
+
+        isProcessing={isProcessing}         isProcessing={isProcessing} 
+
+      />      />
+
+            
+
+      <ChatInput       <ChatInput 
+
+        onSendMessage={handleSendMessage}         onSendMessage={handleSendMessage} 
+
+        isProcessing={isProcessing}         isProcessing={isProcessing} 
+
+      />      />
+
+            
+
+      <QuickActions       <QuickActions 
+
+        onActionSelect={handleQuickAction}         onActionSelect={handleQuickAction} 
+
+        isProcessing={isProcessing}         isProcessing={isProcessing} 
+
+      />      />
+
+    </div>    </div>
+
+  );  );
+
+};};
+
+
+
+export default AITab;export default AITab;
+        pressure: telemetryData.PRESSURE,
+        humidity: telemetryData.HUMIDITY,
+        voltage: telemetryData.VOLTAGE,
+        coordinates: {
+          lat: telemetryData.LATITUDE,
+          lon: telemetryData.LONGITUDE,
+        },
+        satellites: telemetryData.SATELLITES,
+        missionTime: telemetryData.MISSION_TIME_S,
+      },
+      recentCommands: commandHistory.slice(0, 5),
+      recentLogs: logEntries.slice(0, 10),
+      systemStatus: {
+        rssi: telemetryData.RSSI_DBM,
+        airQuality: telemetryData.AIR_QUALITY_PPM,
+      },
+    };
+  };
+
+  const executeCommand = async (command: string) => {
+    // Here you would integrate with your command execution system
+    // For now, we'll simulate it
+    console.log(`AI executing command: ${command}`);
+
+    // You would call your actual command execution function here
+    // await onCommand({ command, teamId: "2024" });
+
+    return `Command "${command}" sent to CanSat`;
+  };
+
+  const processAIResponse = async (
+    userMessage: string
+  ): Promise<{ response: string; commandExecuted?: string }> => {
+    // Mock AI processing - in real implementation, this would call your AI service
+    const context = getMissionContext();
+
+    // Simple command detection (expand this with proper NLP/AI)
+    const lowerMessage = userMessage.toLowerCase();
+
+    if (lowerMessage.includes("start") && lowerMessage.includes("cansat")) {
+      await executeCommand("START");
+      return {
+        response:
+          "I've sent the START command to the CanSat. The mission should begin shortly. I'll monitor the telemetry data for you.",
+        commandExecuted: "START",
+      };
+    }
+
+    if (lowerMessage.includes("stop") || lowerMessage.includes("emergency")) {
+      await executeCommand("EMERGENCY");
+      return {
+        response:
+          "Emergency command sent! The CanSat has been instructed to stop current operations.",
+        commandExecuted: "EMERGENCY",
+      };
+    }
+
+    if (
+      lowerMessage.includes("status") ||
+      (lowerMessage.includes("how") && lowerMessage.includes("doing"))
+    ) {
+      return {
+        response: `Current CanSat Status:
+• Connection: ${context.isConnected ? "Connected" : "Disconnected"}
+• Altitude: ${context.telemetry.altitude.toFixed(
+          1
+        )}m (Barometric), ${context.telemetry.gpsAltitude.toFixed(1)}m (GPS)
+• Temperature: ${context.telemetry.temperature.toFixed(1)}°C
+• Mission Time: ${context.telemetry.missionTime.toFixed(1)}s
+• GPS Satellites: ${context.telemetry.satellites}
+• Signal Strength: ${context.systemStatus.rssi}dBm
+• Air Quality: ${context.systemStatus.airQuality.toFixed(1)} PPM
+
+Everything looks ${
+          context.isConnected ? "good" : "concerning - no connection"
+        }!`,
+      };
+    }
+
+    if (lowerMessage.includes("altitude")) {
+      return {
+        response: `Current altitude readings:
+• Barometric Altitude: ${context.telemetry.altitude.toFixed(1)} meters
+• GPS Altitude: ${context.telemetry.gpsAltitude.toFixed(1)} meters
+• Difference: ${Math.abs(
+          context.telemetry.altitude - context.telemetry.gpsAltitude
+        ).toFixed(1)}m
+
+${
+  context.telemetry.altitude > 1000
+    ? "CanSat is at significant altitude!"
+    : "CanSat is at low altitude."
+}`,
+      };
+    }
+
+    // Default response
+    return {
+      response: `Based on the current mission data, I can help you with:
+• Mission status and telemetry analysis
+• Sending commands (START, STOP, EMERGENCY, etc.)
+• Data interpretation and insights
+• System monitoring and alerts
+
+Current mission time: ${context.telemetry.missionTime.toFixed(
+        1
+      )}s. What would you like to know or do?`,
+    };
+  };
+
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim() || isProcessing) return;
+
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: "user",
+      content: inputMessage,
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInputMessage("");
+    setIsProcessing(true);
+
+    try {
+      const { response, commandExecuted } = await processAIResponse(
+        inputMessage
+      );
+
+      const aiMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: "ai",
+        content: response,
+        timestamp: new Date(),
+        commandExecuted,
+      };
+
+      setMessages((prev) => [...prev, aiMessage]);
+    } catch (error) {
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: "ai",
+        content:
+          "I encountered an error processing your request. Please try again.",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString("en-US", {
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  return (
+    <div className="h-full flex flex-col bg-white">
+      {/* Header */}
+      <div className="bg-[#D9D9D9] border-b border-black px-4 py-2 flex-shrink-0">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-[13px] font-bold text-black">
+              AI MISSION ASSISTANT
+            </h1>
+            <p className="text-[10px] text-gray-600">
+              {isConnected
+                ? "🟢 Connected to CanSat"
+                : "🔴 CanSat Disconnected"}{" "}
+              • Mission Context Available
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="text-[10px] font-bold text-black">
+              MSGS: {messages.length - 1}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Chat Messages */}
+      <div
+        ref={chatContainerRef}
+        className="flex-1 overflow-y-auto p-4 space-y-4"
+      >
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={`flex ${
+              message.role === "user" ? "justify-end" : "justify-start"
+            }`}
+          >
+            <div
+              className={`max-w-[80%] rounded-lg p-3 ${
+                message.role === "user"
+                  ? "bg-[#00AD57] text-white"
+                  : "bg-[#D9D9D9] text-black border border-black"
+              }`}
+            >
+              <div className="text-[12px] leading-relaxed whitespace-pre-wrap">
+                {message.content}
+              </div>
+              <div className="flex items-center justify-between mt-2">
+                <div
+                  className={`text-[9px] ${
+                    message.role === "user" ? "text-green-100" : "text-gray-600"
+                  }`}
+                >
+                  {formatTime(message.timestamp)}
+                </div>
+                {message.commandExecuted && (
+                  <div className="bg-[#FFAB00] text-white px-2 py-1 rounded text-[8px] font-bold">
+                    CMD: {message.commandExecuted}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {isProcessing && (
+          <div className="flex justify-start">
+            <div className="bg-[#D9D9D9] text-black border border-black rounded-lg p-3 max-w-[80%]">
+              <div className="text-[12px] flex items-center gap-2">
+                <div className="animate-pulse">●</div>
+                AI is thinking...
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Input Area */}
+      <div className="border-t border-black p-4 flex-shrink-0">
+        <div className="flex gap-2 items-end">
+          <div className="flex-1">
+            <textarea
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Ask about mission status, request commands, or get insights..."
+              className="w-full border border-black p-2 text-[12px] resize-none h-[80px] focus:outline-none focus:ring-1 focus:ring-[#00AD57]"
+              disabled={isProcessing}
+            />
+            <div className="text-[9px] text-gray-500 mt-1">
+              Press Enter to send • Shift+Enter for new line
+            </div>
+          </div>
+          <Button
+            onClick={handleSendMessage}
+            disabled={!inputMessage.trim() || isProcessing}
+            variant="success"
+            className="h-[80px] px-6"
+          >
+            {isProcessing ? "SENDING..." : "SEND"}
+          </Button>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="border-t border-black bg-gray-50 p-2 flex-shrink-0">
+        <div className="text-[9px] font-bold text-gray-600 mb-2">
+          QUICK ACTIONS:
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          {[
+            "What's the current status?",
+            "Start the CanSat",
+            "Check altitude",
+            "Emergency stop",
+            "Show telemetry data",
+          ].map((action) => (
+            <button
+              key={action}
+              onClick={() => setInputMessage(action)}
+              className="text-[9px] px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-100"
+              disabled={isProcessing}
+            >
+              {action}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AITab;

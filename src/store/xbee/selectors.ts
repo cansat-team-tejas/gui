@@ -28,6 +28,10 @@ export const xbeeSelectors = {
   rssiUplink: (s: XBeeStore) => s.communication.rssi.uplink,
   rssiDownlink: (s: XBeeStore) => s.communication.rssi.downlink,
   rssiLastUpdate: (s: XBeeStore) => s.communication.rssi.lastUpdate,
+  rssiPollingActive: (s: XBeeStore) => s.communication.rssiPolling.isActive,
+  rssiPollingInterval: (s: XBeeStore) => s.communication.rssiPolling.interval,
+  rssiPollingLastTime: (s: XBeeStore) =>
+    s.communication.rssiPolling.lastPollTime,
 
   // === STATISTICS SELECTORS ===
   connectionStats: (s: XBeeStore) => ({
