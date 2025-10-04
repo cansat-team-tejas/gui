@@ -59,11 +59,6 @@ const AITab: React.FC = () => {
   return (
     <section about="AI Mission Assistant">
       <div className="h-full flex flex-col bg-white">
-        <ChatHeader
-          isConnected={missionContext.isConnected}
-          messageCount={messages.length - 1}
-        />
-
         <ChatMessages messages={messages} isProcessing={isProcessing} />
 
         <ChatInput

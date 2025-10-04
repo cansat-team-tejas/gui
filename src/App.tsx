@@ -10,6 +10,9 @@ import LogTab from "./pages/log-tab";
 import SettingsPage from "./pages/settings";
 import { useXBeeStore } from "./store/xbee";
 import AITab from "./pages/ai-tab";
+import { QueryProvider } from "./providers/query-provider";
+import { CLUSTER_IDS } from "./constants";
+import { getClusterName } from "./utils/cluster-helpers";
 
 const App = () => {
   const processFrame = useXBeeStore((state) => state.processFrame);
@@ -35,8 +38,36 @@ const App = () => {
             // Handle AT response frames directly
             processATResponse(frame);
           } else if (frame?.data && typeof frame.data === "string") {
-            // Handle text-based telemetry frames
-            processFrame(frame.data);
+            // Handle text-based frames with cluster ID filtering for explicit frames
+            // Cluster IDs (explicit frames only):
+            // 0x0001 = TELEMETRY
+            // 0x0002 = LOG
+            // 0x0003 = CMD_RESPONSE
+            
+            if (frame.explicitMetadata?.clusterId) {
+              // Explicit frame (0x91) with cluster ID - filter by packet type
+              const clusterId = frame.explicitMetadata.clusterId;
+              const clusterName = getClusterName(clusterId);
+              
+              switch (clusterId) {
+                case CLUSTER_IDS.TELEMETRY: // 0x0001
+                  processFrame(frame.data);
+                  break;
+                case CLUSTER_IDS.LOG: // 0x0002
+                  processFrame(frame.data);
+                  break;
+                case CLUSTER_IDS.CMD_RESPONSE: // 0x0003
+                  processFrame(frame.data);
+                  break;
+                default:
+                  // Unknown cluster ID - log but still process
+                  console.warn(`Unknown cluster ID: ${clusterName}`);
+                  processFrame(frame.data);
+              }
+            } else {
+              // Standard frame (0x90) or explicit frame without cluster filtering
+              processFrame(frame.data);
+            }
           }
         }
       );
@@ -51,21 +82,23 @@ const App = () => {
   }, [processFrame, processATResponse]);
 
   return (
-    <BrowserRouter>
-      <div className="flex flex-col h-screen w-screen overflow-hidden font-roboto-mono antialiased">
-        <Header />
-        <main className="h-full flex overflow-hidden">
-          <LeftPanel />
-          <Routes>
-            <Route path={ROUTE_PATHS.PLOT_TAB} element={<PlotTab />} />
-            <Route path={ROUTE_PATHS.CSV_TAB} element={<CSVTab />} />
-            <Route path={ROUTE_PATHS.LOG_TAB} element={<LogTab />} />
-            <Route path={ROUTE_PATHS.AI_TAB} element={<AITab />} />
-            <Route path={ROUTE_PATHS.SETTINGS} element={<SettingsPage />} />
-          </Routes>
-        </main>
-      </div>
-    </BrowserRouter>
+    <QueryProvider>
+      <BrowserRouter>
+        <div className="flex flex-col h-screen w-screen overflow-hidden font-roboto-mono antialiased">
+          <Header />
+          <main className="h-full flex overflow-hidden">
+            <LeftPanel />
+            <Routes>
+              <Route path={ROUTE_PATHS.PLOT_TAB} element={<PlotTab />} />
+              <Route path={ROUTE_PATHS.CSV_TAB} element={<CSVTab />} />
+              <Route path={ROUTE_PATHS.LOG_TAB} element={<LogTab />} />
+              <Route path={ROUTE_PATHS.AI_TAB} element={<AITab />} />
+              <Route path={ROUTE_PATHS.SETTINGS} element={<SettingsPage />} />
+            </Routes>
+          </main>
+        </div>
+      </BrowserRouter>
+    </QueryProvider>
   );
 };
 

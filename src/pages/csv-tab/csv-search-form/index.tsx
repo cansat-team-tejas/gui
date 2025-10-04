@@ -5,6 +5,7 @@ import Button from "../../../components/button";
 import LabelValue from "../../../components/label-value";
 import { useMemo } from "react";
 import { columns } from "../../../data/csv-data";
+import { useCSVExport } from "../../../hooks/use-csv-export";
 
 interface SearchFormProps {
   sortingToggle?: React.ReactNode;
@@ -12,6 +13,7 @@ interface SearchFormProps {
 
 const SearchForm = ({ sortingToggle }: SearchFormProps = {}) => {
   const { reset } = useFormContext();
+  const { handleExport } = useCSVExport();
 
   const TABLE_COLUMNS_OPTIONS = useMemo(
     () =>
@@ -24,10 +26,6 @@ const SearchForm = ({ sortingToggle }: SearchFormProps = {}) => {
 
   const handleClear = () => {
     reset();
-  };
-
-  const handleExport = () => {
-    console.log("Export clicked");
   };
 
   return (

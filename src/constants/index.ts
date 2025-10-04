@@ -12,15 +12,15 @@ export const FRAME_TYPES = {
 
 export type FrameType = (typeof FRAME_TYPES)[keyof typeof FRAME_TYPES];
 
-// Telemetry processing constants
 export const TELEMETRY_CONSTANTS = {
   CSV_FIELD_COUNT: 41,
   MAX_HISTORY_SIZE: 1000,
-  DATA_RATE_TARGET: 10,
+  DATA_RATE_TARGET: 10, // Hz - matches firmware SENSOR_PROCESS_INTERVAL
+  TELEMETRY_INTERVAL: 100, // ms - matches firmware TELEMETRY_DATA_INTERVAL
+  LOG_INTERVAL: 5000, // ms - matches firmware LOG_DATA_INTERVAL
   MAX_BUFFER_SIZE: 5000,
 } as const;
 
-// Flight state mappings
 export const FLIGHT_STATES = {
   0: "BOOT",
   1: "TEST_MODE",
@@ -42,31 +42,64 @@ export const XBEE_CONSTANTS = {
   RETRY_ATTEMPTS: 3,
 } as const;
 
+// XBee Explicit Frame Cluster IDs (matches firmware packet types)
+export const CLUSTER_IDS = {
+  TELEMETRY: 0x0001,
+  LOG: 0x0002,
+  CMD_RESPONSE: 0x0003,
+} as const;
+
+export type ClusterID = (typeof CLUSTER_IDS)[keyof typeof CLUSTER_IDS];
+
 // Ground Station Commands (matches firmware GS_COMMANDS)
 export const GS_COMMANDS = {
   START_TELEMETRY: "START_TX",
-  STOP_TELEMETRY: "STOP_TX",
   STATUS: "STATUS",
+  STOP_TELEMETRY: "STOP_TX",
   CALIBRATE_SENSORS: "CAL_SENSORS",
-  CALIBRATE_GYRO: "CAL_GYRO",
-  CALIBRATE_BARO: "CAL_BARO",
-  CALIBRATE_ACCEL: "CAL_ACCEL",
   RESET_SYSTEM: "RESET",
-  RESET_CONFIRM: "RESET_CONFIRM",
   EMERGENCY: "EMERGENCY",
-  DEPLOY_SECONDARY: "DEPLOY_SECONDARY",
+  PARACHUTE_DEPLOY: "PARACHUTE_DEPLOY",
   START: "START",
   SHUTDOWN: "SHUTDOWN",
-  QNH: "QNH:",
+  CLEAR_MISSION: "CLEAR_MISSION",
   SD_CLEAN: "SD_CLEAN",
   SD_INFO: "SD_INFO",
   SD_LIST: "SD_LIST",
-  SD_DIR_INFO: "SD_DIR_INFO:",
-  SD_DIR_DELETE: "SD_DIR_DELETE:",
   XBEE_RESET: "XBEE_RESET",
-  XBEE_HW_RESET: "XBEE_HW_RESET",
-  GPS_RESET: "GPS_RESET",
-  AIR_QUALITY_CAL: "AIR_QUALITY_CAL",
+  // RTC time management commands
+  SET_MISSION_START: "SET_MISSION_START",
+  GET_TIME: "GET_TIME",
+  SET_TIME: "SET_TIME:",
+  RTC_STATUS: "RTC_STATUS",
+  // MCU monitoring commands
+  MCU_STATUS: "MCU_STATUS",
+  // Communication diagnostics
+  COMM_STATUS: "COMM_STATUS",
+  // Reaction wheel control commands
+  ARM_RW: "ARM_RW",
+  DISARM_RW: "DISARM_RW",
+  STOP_RW: "STOP_RW",
+  RW_STATUS: "RW_STATUS",
+  SET_RW_SPEED: "SET_RW_SPEED:",
+  SET_PID_GAINS: "SET_PID:",
+} as const;
+
+// Sensor configurations (used for GCS-side calculations)
+export const SENSOR_CONFIG = {
+  TYPE: "MICS5524" as const,
+  MICS5524: {
+    ADC_MAX: 4096, // Teensy 12-bit ADC
+    RL_OHMS: 10000, // Load resistor in ohms (adjust to your hardware)
+    R0_OHMS: 0, // Clean-air baseline resistance (to be calibrated per sensor)
+    // Per-gas curve coefficients: ppm = A * (Rs/R0)^B (set after calibration)
+    COEFFS: {
+      CO: { A: null as number | null, B: null as number | null },
+      CH4: { A: null as number | null, B: null as number | null },
+      NH3: { A: null as number | null, B: null as number | null },
+      H2: { A: null as number | null, B: null as number | null },
+    },
+  },
 } as const;
 
 // Health Flags (matches firmware HEALTH_FLAGS)
@@ -78,6 +111,7 @@ export const HEALTH_FLAGS = {
   AIR_OK: 1 << 4, // Air quality sensor initialized
   SD_OK: 1 << 5, // SD logger initialized
   COMM_OK: 1 << 6, // XBee comm interface initialized
+  RTC_OK: 1 << 7, // RTC interface initialized
 } as const;
 
 // Health flag helper functions
@@ -89,6 +123,7 @@ export const getHealthStatus = (healthFlags: number) => ({
   airQuality: !!(healthFlags & HEALTH_FLAGS.AIR_OK),
   sdCard: !!(healthFlags & HEALTH_FLAGS.SD_OK),
   communication: !!(healthFlags & HEALTH_FLAGS.COMM_OK),
+  rtc: !!(healthFlags & HEALTH_FLAGS.RTC_OK),
 });
 
 // Mission Parameters (matches firmware CONSTANTS)
@@ -118,4 +153,5 @@ export interface HealthStatus {
   airQuality: boolean;
   sdCard: boolean;
   communication: boolean;
+  rtc: boolean;
 }

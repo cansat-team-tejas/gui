@@ -23,7 +23,7 @@ const CommandCategory: React.FC<CommandCategoryProps> = ({
       case "emergency":
         return "bg-red-500 border border-red-700 text-white hover:bg-red-600";
       default:
-        return "bg-[rgba(217,217,217,0.5)] border border-[rgba(0,0,0,0.58)] text-[rgba(0,0,0,0.65)] hover:bg-[rgba(217,217,217,0.8)]";
+        return "bg-[rgba(217,217,217,0.5)] border border-[rgba(0,0,0,1)] text-[rgba(0,0,0,1)] hover:bg-[rgba(217,217,217,0.8)]";
     }
   };
 
@@ -47,7 +47,7 @@ const CommandCategory: React.FC<CommandCategoryProps> = ({
           <button
             key={index}
             onClick={() => onSendCommand(cmd.command)}
-            className={`rounded-[2px] px-2 py-[6px] h-[32px] w-[131px] text-[13px] font-medium transition-colors ${getButtonStyles()}`}
+            className={`px-5 py-1 w-max text-[12px] font-bold transition-colors ${getButtonStyles()}`}
             title={cmd.command}
           >
             {cmd.label}

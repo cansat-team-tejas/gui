@@ -14,18 +14,36 @@ export const SYSTEM_CONTROL_COMMANDS: Command[] = [
 
 export const EMERGENCY_COMMANDS: Command[] = [
   { label: "EMERGENCY", command: "EMERGENCY" },
-  { label: "RESET CONFIRM", command: "RESET_CONFIRM" },
 ];
 
 export const CALIBRATION_COMMANDS: Command[] = [
   { label: "CAL ALL", command: "CAL_SENSORS" },
-  { label: "CAL GYRO", command: "CAL_GYRO" },
-  { label: "CAL BARO", command: "CAL_BARO" },
-  { label: "CAL ACCEL", command: "CAL_ACCEL" },
 ];
 
 export const FLIGHT_CONTROL_COMMANDS: Command[] = [
-  { label: "DEPLOY SEC", command: "DEPLOY_SECONDARY" },
+  { label: "PARACHUTE DEPLOY", command: "PARACHUTE_DEPLOY" },
+];
+
+export const REACTION_WHEEL_COMMANDS: Command[] = [
+  { label: "ARM RW", command: "ARM_RW" },
+  { label: "DISARM RW", command: "DISARM_RW" },
+  { label: "STOP RW", command: "STOP_RW" },
+  { label: "RW STATUS", command: "RW_STATUS" },
+];
+
+export const RTC_TIME_COMMANDS: Command[] = [
+  { label: "GET TIME", command: "GET_TIME" },
+  { label: "RTC STATUS", command: "RTC_STATUS" },
+  { label: "SET MISSION START", command: "SET_MISSION_START" },
+];
+
+export const MCU_MONITORING_COMMANDS: Command[] = [
+  { label: "MCU STATUS", command: "MCU_STATUS" },
+  { label: "COMM STATUS", command: "COMM_STATUS" },
+];
+
+export const HARDWARE_RESET_COMMANDS: Command[] = [
+  { label: "XBEE RESET", command: "XBEE_RESET" },
 ];
 
 export const SD_CARD_COMMANDS: Command[] = [
@@ -34,13 +52,15 @@ export const SD_CARD_COMMANDS: Command[] = [
   { label: "SD LIST", command: "SD_LIST" },
 ];
 
-export const QNH_DEFAULTS = {
-  DEFAULT_VALUE: "1013.25",
-  MIN_VALUE: 900,
-  MAX_VALUE: 1100,
-  STEP: 0.01,
-} as const;
-
 export const TIMEOUTS = {
   RESET_CONFIRM: 10000, // 10 seconds
+  CONFIRMATION_TIMEOUT_MS: 30000, // 30 seconds
 } as const;
+
+export const CRITICAL_COMMANDS = [
+  "EMERGENCY",
+  "SHUTDOWN",
+  "PARACHUTE_DEPLOY",
+  "START",
+  "RESET",
+] as const;

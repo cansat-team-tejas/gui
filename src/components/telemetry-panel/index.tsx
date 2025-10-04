@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import LabelValue, { SmallFont } from "../label-value";
 import { useTelemetryLatest } from "../../hooks/use-xbee";
 import { getSafeTelemetryData } from "../../utils/telemetry-helpers";
+import { HEALTH_FLAGS } from "../../constants";
 
 const TelemetryPanel = () => {
   const latestTelemetry = useTelemetryLatest();
@@ -29,15 +30,9 @@ const TelemetryPanel = () => {
         label: "GNSS ALTITUDE",
         value: (
           <>
-            {telemetryData.GPS_ALTITUDE.toFixed(1)}
+            {(telemetryData.GNSS_ALTITUDE || 0).toFixed(1)}
             <SmallFont>m</SmallFont>
-            <SmallFont className="ml-2 text-gray-500">
-              Δ
-              {Math.abs(
-                telemetryData.GPS_ALTITUDE - telemetryData.ALTITUDE
-              ).toFixed(1)}
-              m
-            </SmallFont>
+            <SmallFont className="ml-2 text-gray-500">GNSS</SmallFont>
           </>
         ),
       },
@@ -45,7 +40,7 @@ const TelemetryPanel = () => {
         label: "TEMPERATURE",
         value: (
           <>
-            {telemetryData.TEMP.toFixed(1)}
+            {(telemetryData.TEMPERATURE || telemetryData.TEMP || 0).toFixed(1)}
             <SmallFont>°C</SmallFont>
             <SmallFont className="ml-2 text-gray-500">ENV</SmallFont>
           </>
@@ -115,7 +110,7 @@ const TelemetryPanel = () => {
         label: "CURRENT",
         value: (
           <>
-            {telemetryData.CURRENT.toFixed(1)}
+            {(telemetryData.CURRENT || 0).toFixed(1)}
             <SmallFont>A</SmallFont>
           </>
         ),
@@ -126,16 +121,16 @@ const TelemetryPanel = () => {
           <>
             <span
               className={
-                telemetryData.POWER > 15
+                (telemetryData.POWER || 0) > 15
                   ? "text-yellow-600 font-bold"
                   : "text-gray-700"
               }
             >
-              {telemetryData.POWER.toFixed(1)}
+              {(telemetryData.POWER || 0).toFixed(1)}
             </span>
             <SmallFont>W</SmallFont>
             <SmallFont className="ml-2 text-gray-500">
-              {telemetryData.VOLTAGE > 0
+              {telemetryData.VOLTAGE > 0 && telemetryData.POWER
                 ? ((telemetryData.POWER / telemetryData.VOLTAGE) * 100).toFixed(
                     0
                   )
@@ -150,18 +145,19 @@ const TelemetryPanel = () => {
         value: (
           <>
             <span className="font-mono text-[10px]">
-              {telemetryData.LATITUDE.toFixed(5)}°,{" "}
-              {telemetryData.LONGITUDE.toFixed(5)}°
+              {(
+                telemetryData.LATITUDE ||
+                telemetryData.GNSS_LATITUDE ||
+                0
+              ).toFixed(5)}
+              °,{" "}
+              {(
+                telemetryData.LONGITUDE ||
+                telemetryData.GNSS_LONGITUDE ||
+                0
+              ).toFixed(5)}
+              °
             </span>
-            <SmallFont className="ml-2 text-gray-500">
-              ±
-              {telemetryData.SATELLITES < 4
-                ? "10"
-                : telemetryData.SATELLITES < 6
-                ? "5"
-                : "3"}
-              m
-            </SmallFont>
           </>
         ),
       },
@@ -171,9 +167,10 @@ const TelemetryPanel = () => {
           <>
             <span
               className={
-                telemetryData.SATELLITES < 4
+                (telemetryData.SATELLITES || telemetryData.GNSS_SATS || 0) < 4
                   ? "text-red-600 font-bold"
-                  : telemetryData.SATELLITES < 6
+                  : (telemetryData.SATELLITES || telemetryData.GNSS_SATS || 0) <
+                    6
                   ? "text-yellow-600 font-bold"
                   : "text-green-600 font-bold"
               }
@@ -255,20 +252,34 @@ const TelemetryPanel = () => {
           <>
             <span
               className={
-                Math.abs(telemetryData.GYRO_SPIN) > 5
+                Math.abs(
+                  telemetryData.GYRO_SPIN || telemetryData.GYRO_SPIN_RATE || 0
+                ) > 5
                   ? "text-red-600 font-bold"
-                  : Math.abs(telemetryData.GYRO_SPIN) > 2
+                  : Math.abs(
+                      telemetryData.GYRO_SPIN ||
+                        telemetryData.GYRO_SPIN_RATE ||
+                        0
+                    ) > 2
                   ? "text-yellow-600"
                   : "text-gray-700"
               }
             >
-              {telemetryData.GYRO_SPIN.toFixed(1)}
+              {(
+                telemetryData.GYRO_SPIN ||
+                telemetryData.GYRO_SPIN_RATE ||
+                0
+              ).toFixed(1)}
             </span>
             <SmallFont>/s</SmallFont>
             <SmallFont className="ml-2 text-gray-500">
-              {Math.abs(telemetryData.GYRO_SPIN) > 5
+              {Math.abs(
+                telemetryData.GYRO_SPIN || telemetryData.GYRO_SPIN_RATE || 0
+              ) > 5
                 ? "HIGH"
-                : Math.abs(telemetryData.GYRO_SPIN) > 2
+                : Math.abs(
+                    telemetryData.GYRO_SPIN || telemetryData.GYRO_SPIN_RATE || 0
+                  ) > 2
                 ? "MED"
                 : "LOW"}
             </SmallFont>
@@ -290,31 +301,34 @@ const TelemetryPanel = () => {
     [telemetryData]
   );
 
-  // Air quality data
+  // Air quality data - MICS-5524 sensor with derived gas concentrations (compact view)
   const AIR_QUALITY_DATA = useMemo(
     () => [
       {
-        label: "AIR QUALITY",
+        label: "VOC/ETHANOL",
         value: (
           <>
             <span
               className={
-                telemetryData.AIR_QUALITY_PPM > 50
+                (telemetryData.AQ_ETHANOL_PPM || telemetryData.VOC_PPM || 0) >
+                100
                   ? "text-red-600 font-bold"
-                  : telemetryData.AIR_QUALITY_PPM > 25
+                  : (telemetryData.AQ_ETHANOL_PPM ||
+                      telemetryData.VOC_PPM ||
+                      0) > 50
                   ? "text-yellow-600 font-bold"
                   : "text-green-600"
               }
             >
-              {telemetryData.AIR_QUALITY_PPM.toFixed(1)}
+              {(
+                telemetryData.AQ_ETHANOL_PPM ||
+                telemetryData.VOC_PPM ||
+                0
+              ).toFixed(1)}
             </span>
             <SmallFont>ppm</SmallFont>
             <SmallFont className="ml-2 text-gray-500">
-              {telemetryData.AIR_QUALITY_PPM > 50
-                ? "HIGH"
-                : telemetryData.AIR_QUALITY_PPM > 25
-                ? "MED"
-                : "GOOD"}
+              RAW:{telemetryData.AIR_QUALITY_RAW || 0}
             </SmallFont>
           </>
         ),
@@ -327,41 +341,44 @@ const TelemetryPanel = () => {
               className={
                 (telemetryData.AQ_CO_PPM || 0) > 10
                   ? "text-red-600 font-bold"
+                  : (telemetryData.AQ_CO_PPM || 0) > 5
+                  ? "text-yellow-600"
                   : "text-gray-700"
               }
             >
               CO:{telemetryData.AQ_CO_PPM?.toFixed(1) || "0.0"}
             </span>
             <SmallFont>ppm</SmallFont>
-            <span className="ml-3">
-              <span
-                className={
-                  (telemetryData.AQ_CH4_PPM || 0) > 1000
-                    ? "text-yellow-600 font-bold"
-                    : "text-gray-700"
-                }
-              >
-                CH4:{telemetryData.AQ_CH4_PPM?.toFixed(1) || "0.0"}
-              </span>
+            <span className="ml-2">
+              H2:{telemetryData.AQ_H2_PPM?.toFixed(1) || "0.0"}
               <SmallFont>ppm</SmallFont>
             </span>
           </>
         ),
       },
       {
-        label: "OTHER COMPOUNDS",
+        label: "HYDROCARBONS",
         value: (
           <>
-            NH3:{telemetryData.AQ_NH3_PPM?.toFixed(1) || "0.0"}
+            CH4:{telemetryData.AQ_CH4_PPM?.toFixed(1) || "0.0"}
             <SmallFont>ppm</SmallFont>
             <span className="ml-2">
-              H2:{telemetryData.AQ_H2_PPM?.toFixed(1) || "0.0"}
+              LPG:{telemetryData.AQ_LPG_PPM?.toFixed(1) || "0.0"}
             </span>
             <SmallFont>ppm</SmallFont>
             <span className="ml-2">
-              EtOH:{telemetryData.AQ_ETHANOL_PPM?.toFixed(1) || "0.0"}
+              C3H8:{telemetryData.AQ_PROPANE_PPM?.toFixed(1) || "0.0"}
             </span>
             <SmallFont>ppm</SmallFont>
+          </>
+        ),
+      },
+      {
+        label: "AMMONIA",
+        value: (
+          <>
+            {telemetryData.AQ_NH3_PPM?.toFixed(2) || "0.00"}
+            <SmallFont>ppm NH3</SmallFont>
           </>
         ),
       },
@@ -380,13 +397,14 @@ const TelemetryPanel = () => {
               {(() => {
                 const flags = telemetryData.HEALTH_FLAGS || 0;
                 const systems = [];
-                if (flags & 1) systems.push("ENV");
-                if (flags & 2) systems.push("GPS");
-                if (flags & 4) systems.push("IMU");
-                if (flags & 8) systems.push("PWR");
-                if (flags & 16) systems.push("AIR");
-                if (flags & 32) systems.push("SD");
-                if (flags & 64) systems.push("COM");
+                if (flags & HEALTH_FLAGS.ENV_OK) systems.push("ENV");
+                if (flags & HEALTH_FLAGS.GPS_OK) systems.push("GPS");
+                if (flags & HEALTH_FLAGS.IMU_OK) systems.push("IMU");
+                if (flags & HEALTH_FLAGS.POWER_OK) systems.push("PWR");
+                if (flags & HEALTH_FLAGS.AIR_OK) systems.push("AIR");
+                if (flags & HEALTH_FLAGS.SD_OK) systems.push("SD");
+                if (flags & HEALTH_FLAGS.COMM_OK) systems.push("COM");
+                if (flags & HEALTH_FLAGS.RTC_OK) systems.push("RTC");
                 return systems.length > 0 ? systems.join("|") : "NONE";
               })()}{" "}
               OK

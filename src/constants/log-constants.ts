@@ -1,63 +1,49 @@
-// Flight Software Log Symbol Mappings
+// Flight Software Log Symbol Mappings (matches firmware LOG_CONSTANTS)
 export const LOG_SYMBOL_MEANINGS: Record<string, string> = {
   // System Events
   $: "Log Queue Initialized",
   "%": "Telemetry Queue Initialized",
-  A: "System Startup",
-  B: "System Error",
+  H: "System Startup",
   C: "System Reset",
-  D: "System Ready",
+  B: "System Ready",
 
   // Environment Sensor Events
-  E: "Environment Sensor Failed",
-  F: "Environment Sensor Success",
-  G: "Environment Data",
+  k: "Environment Sensor Failed",
+  R: "Environment Sensor Success",
 
   // GPS Events
-  H: "GPS Failed",
-  I: "GPS Success",
-  J: "GPS Data",
-  K: "GPS Fix Acquired",
+  G: "GPS Success",
 
   // IMU Events
-  L: "IMU Failed",
-  M: "IMU Success",
-  N: "IMU Data",
+  U: "IMU Failed",
+  Q: "IMU Success",
 
   // Power System Events
-  O: "Power System Failed",
-  P: "Power System Success",
-  Q: "Power Data",
+  w: "Power System Failed",
+  f: "Power System Success",
 
   // Air Quality Events
-  R: "Air Quality Sensor Success",
-  S: "Air Quality Data",
+  e: "Air Quality Sensor Success",
+  b: "Air Quality Warmed Up",
+  d: "Air Quality Calibrated",
 
   // Parachute Events
-  T: "Parachute Deployed",
-  U: "Parachute Failed",
-  V: "Parachute Armed",
+  h: "Parachute Deployed",
 
   // Communication Events
-  W: "Serial Failed",
-  X: "Serial Success",
-  Y: "Communication Failed",
-  Z: "Communication Success",
-  "1": "Communication No Response",
   "2": "Command Received",
-
-  // Data Management Events
-  "3": "Data Overflow",
-  "4": "Data Saved",
-  "5": "Data Cleared",
+  "6": "XBee Reset",
+  "4": "Send Failed",
+  a: "Retry Attempt",
+  V: "Max Retries Reached",
 
   // Command Events
-  "6": "Reset Command",
-  "7": "Rate Change Command",
-  "8": "Calibrate Command",
-  "9": "Emergency Command",
-  "!": "Start Command",
-  "0": "Shutdown Command",
+  "7": "Reset Command",
+  "9": "Calibrate Command",
+  "!": "Emergency Command",
+  l: "Start Command",
+  n: "Shutdown Command",
+  W: "Parachute Deploy Command",
 
   // Flight State Events
   "{": "Boot State",
@@ -69,92 +55,87 @@ export const LOG_SYMBOL_MEANINGS: Record<string, string> = {
   "=": "Secondary Deploy",
   "+": "Final Descent",
   "*": "Impact",
+  "8": "Flight State Recovered",
 
   // SD Card Events
   "@": "SD Card Init Success",
   "#": "SD Card Init Failed",
-  "^": "SD Card Write Success",
   "~": "SD Card Write Failed",
+  p: "SD Card Reuse Directory",
+  "1": "SD Card New Directory",
 
   // Telemetry Events
   "|": "Telemetry Started",
   "/": "Telemetry Stopped",
 
   // Calibration Events
-  ":": "Gyro Calibration",
-  ";": "Barometer Calibration",
-  "<": "Accelerometer Calibration",
-  ">": "Magnetometer Calibration",
+  J: "IMU Calibration Start",
   "?": "Calibration Complete",
 
   // Other Events
   "&": "Log File Init Failed",
   ".": "Command Controller Initialized",
-  ",": "Reaction Wheel Initialized",
 
-  // Extended firmware log symbols (lowercase)
+  // Mission Persistence System
+  _: "System State Recovered",
+  K: "System Fresh Start",
+  "0": "System State Reset",
+  "^": "State Recovered from EEPROM",
+  g: "State Recovery Failed",
+  z: "State Saved",
+  "<": "State Critical Save",
 
-  // Air Quality Sensor Status
-  a: "Air quality auto-calibration performed",
-  b: "Air quality baseline resistance updated",
-  c: "Air quality sensor calibrated successfully",
-  d: "Air quality sensor appears disconnected",
-  h: "High gas concentration detected",
-  r: "Air quality sensor failed to initialize",
-  s: "Air quality sensor reading error",
-  u: "Air quality warmup period started",
-  w: "Air quality warmed up (3 minute warmup complete)",
-  x: "Air quality calibration failed",
+  // RTC System Events
+  F: "RTC Initialized",
+  m: "RTC Time Set",
+  x: "RTC GPS Sync",
+  v: "RTC Time Invalid",
+  E: "RTC Mission Start",
 
-  // BME280 Environmental Sensor
-  f: "BME280 I2C active at address 0x77",
-  g: "BME280 I2C active at address 0x76",
-  k: "BME280 starting diagnostics",
-  l: "BME280 device found at address 0x76",
-  m: "BME280 device found at address 0x77",
-  n: "BME280 working/responding at 0x76",
-  o: "BME280 working/responding at 0x77",
-  p: "BME280 no I2C communication",
+  // Air Quality Fallback
+  ">": "Air Quality Fallback Calibration",
 
-  // Other System Events
-  e: "Emergency mode activated",
-  i: "IMU calibration warning",
-  j: "Jump detection algorithm",
-  q: "Queue full warning",
-  t: "Temperature out of range",
-  v: "Voltage regulator warning",
-  y: "Year rollover event",
-  z: "Zero crossing detected",
+  // Reaction Wheel System
+  L: "Reaction Wheel Init",
+  i: "Reaction Wheel Arming",
+  o: "Reaction Wheel Armed",
+  r: "Reaction Wheel Disarmed",
+  t: "Reaction Wheel Emergency Stop",
+  s: "Reaction Wheel Enabled",
+  "-": "Reaction Wheel Disabled",
+  N: "Yaw Stabilizer Init",
+  q: "Yaw Stabilizer Active",
+  y: "Yaw Stabilizer Inactive",
 };
 
 // Category mappings for color coding
 export const LOG_CATEGORIES = {
-  SYSTEM: ["$", "%", "A", "B", "C", "D", "e", "j", "q", "y", "z"],
-  ENVIRONMENT: ["E", "F", "G", "f", "g", "k", "l", "m", "n", "o", "p", "t"],
-  GPS: ["H", "I", "J", "K"],
-  IMU: ["L", "M", "N", "i"],
-  POWER: ["O", "P", "Q", "v"],
-  AIR_QUALITY: ["R", "S", "a", "b", "c", "d", "h", "r", "s", "u", "w", "x"],
-  PARACHUTE: ["T", "U", "V"],
-  COMMUNICATION: ["W", "X", "Y", "Z", "1", "2", "c", "n", "x"],
-  DATA: ["3", "4", "5", "d", "o", "q"],
-  COMMANDS: ["6", "7", "8", "9", "!", "0"],
-  FLIGHT_STATES: ["{", "}", "[", "]", "(", ")", "=", "+", "*", "j", "z"],
-  SD_CARD: ["@", "#", "^", "~", "f"],
+  SYSTEM: ["$", "%", "H", "B", "C", "K", "_", "0", ".", "&"],
+  ENVIRONMENT: ["k", "R"],
+  GPS: ["G"],
+  IMU: ["U", "Q", "J"],
+  POWER: ["w", "f"],
+  AIR_QUALITY: ["e", "b", "d", ">"],
+  PARACHUTE: ["h", "W"],
+  COMMUNICATION: ["2", "6", "4", "a", "V"],
+  COMMANDS: ["7", "9", "!", "l", "n"],
+  FLIGHT_STATES: ["{", "}", "[", "]", "(", ")", "=", "+", "*", "8"],
+  SD_CARD: ["@", "#", "~", "p", "1"],
   TELEMETRY: ["|", "/"],
-  CALIBRATION: [":", ";", "<", ">", "?"],
-  ERRORS: ["e", "w", "y"],
-  OTHER: ["&", ".", ",", "u"],
-};
+  CALIBRATION: ["?"],
+  MISSION_PERSISTENCE: ["^", "g", "z", "<"],
+  RTC: ["F", "m", "x", "v", "E"],
+  REACTION_WHEEL: ["L", "i", "o", "r", "t", "s", "-", "N", "q", "y"],
+} as const;
 
 // Get category for a log symbol
 export const getLogCategory = (symbol: string): keyof typeof LOG_CATEGORIES => {
   for (const [category, symbols] of Object.entries(LOG_CATEGORIES)) {
-    if (symbols.includes(symbol)) {
+    if ((symbols as readonly string[]).includes(symbol)) {
       return category as keyof typeof LOG_CATEGORIES;
     }
   }
-  return "OTHER";
+  return "SYSTEM"; // Default fallback to SYSTEM instead of OTHER
 };
 
 // Parse log message format: "[timestamp symbol]" or "symbol:timestamp" or just raw message
@@ -284,17 +265,69 @@ export const getLogDisplayMessage = (symbol: string): string => {
     h: "Air Quality: High PPM ⚠️",
     x: "Air Quality: Cal Failed ❌",
     b: "Air Quality: Baseline Updated 🔄",
+    f: "Air Quality: Fallback Cal 🔄",
 
-    // BME280 Environmental Sensor
-    g: "BME280: I2C Ready (0x76) ✅",
-    f: "BME280: I2C Ready (0x77) ✅",
-    E: "BME280: Init Failed ❌",
-    k: "BME280: Running Diagnostics...",
-    l: "BME280: Found at 0x76",
-    m: "BME280: Found at 0x77",
-    n: "BME280: Responding (0x76) ✅",
-    o: "BME280: Responding (0x77) ✅",
-    p: "BME280: No I2C Communication ❌",
+    // System Status
+    A: "System: Starting up...",
+    D: "System: Ready ✅",
+    B: "System: Error ❌",
+    C: "System: Reset 🔄",
+
+    // GPS Status
+    I: "GPS: Success ✅",
+    H: "GPS: Failed ❌",
+    K: "GPS: Fix Acquired 📍",
+    g: "GPS: Reset 🔄",
+
+    // IMU Status
+    M: "IMU: Success ✅",
+    L: "IMU: Failed ❌",
+
+    // Power Status
+    P: "Power: Success ✅",
+    O: "Power: Failed ❌",
+
+    // Communication Status
+    Z: "Comm: Success ✅",
+    Y: "Comm: Failed ❌",
+    z: "Comm: XBee Reset 🔄",
+    y: "Comm: Send Failed ❌",
+    t: "Comm: Timeout ⏱️",
+    m: "Comm: Max Retries ❌",
+
+    // SD Card Status
+    "@": "SD Card: Init Success ✅",
+    "#": "SD Card: Init Failed ❌",
+    "^": "SD Card: Write Success 💾",
+    "~": "SD Card: Write Failed ❌",
+
+    // Telemetry Status
+    "|": "Telemetry: Started 📡",
+    "/": "Telemetry: Stopped ⏹️",
+
+    // Parachute Status
+    T: "Parachute: Deployed 🪂",
+    U: "Parachute: Failed ❌",
+    V: "Parachute: Armed ⚠️",
+
+    // Flight States
+    "{": "Flight: Boot 🔄",
+    "}": "Flight: Test Mode 🧪",
+    "[": "Flight: Launch Pad 🚀",
+    "]": "Flight: Ascent 📈",
+    "(": "Flight: Rocket Deploy 🚀",
+    ")": "Flight: Descent 📉",
+    "=": "Flight: Secondary Deploy 🪂",
+    "+": "Flight: Final Descent 📉",
+    "*": "Flight: Impact 💥",
+
+    // Calibration
+    "?": "Calibration: Complete ✅",
+    ":": "Calibrating: Gyro 🔄",
+    ";": "Calibrating: Baro 🔄",
+    "<": "Calibrating: Accel 🔄",
+    ">": "Calibrating: Mag 🔄",
+    i: "Calibrating: IMU Start 🔄",
   };
 
   return (

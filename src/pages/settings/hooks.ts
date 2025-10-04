@@ -5,14 +5,9 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { SettingsState } from "./types";
-import {
-  CustomCommandFormData,
-  customCommandSchema,
-  QnhFormData,
-  qnhSchema,
-} from "./schemas";
-import { QNH_DEFAULTS, TIMEOUTS } from "./constants";
+import { SettingsState, CriticalCommand, ConfirmationState } from "./types";
+import { CustomCommandFormData, customCommandSchema } from "./schemas";
+import { CRITICAL_COMMANDS } from "./constants";
 import {
   useScanPorts,
   useConnect,
@@ -29,6 +24,9 @@ export const useSettingsState = (): SettingsState & {
   setCommandStatus: (status: string) => void;
   setShowResetConfirm: (show: boolean) => void;
   setResetTimeout: (timeout: NodeJS.Timeout | null) => void;
+  setConfirmationState: (
+    state: ConfirmationState | ((prev: ConfirmationState) => ConfirmationState)
+  ) => void;
 } => {
   const [isScanning, setIsScanning] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -36,6 +34,14 @@ export const useSettingsState = (): SettingsState & {
   const [commandStatus, setCommandStatus] = useState("");
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetTimeout, setResetTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [confirmationState, setConfirmationState] = useState<ConfirmationState>(
+    {
+      isOpen: false,
+      command: null,
+      timeoutId: null,
+      timeRemaining: 30,
+    }
+  );
 
   return {
     isScanning,
@@ -44,12 +50,14 @@ export const useSettingsState = (): SettingsState & {
     commandStatus,
     showResetConfirm,
     resetTimeout,
+    confirmationState,
     setIsScanning,
     setIsConnecting,
     setConnectionStatus,
     setCommandStatus,
     setShowResetConfirm,
     setResetTimeout,
+    setConfirmationState,
   };
 };
 
@@ -75,15 +83,6 @@ export const useCustomCommandForm = () => {
     resolver: zodResolver(customCommandSchema),
     defaultValues: {
       command: "",
-    },
-  });
-};
-
-export const useQnhForm = () => {
-  return useForm<QnhFormData>({
-    resolver: zodResolver(qnhSchema),
-    defaultValues: {
-      qnh: QNH_DEFAULTS.DEFAULT_VALUE,
     },
   });
 };
@@ -157,25 +156,80 @@ export const useCommandManagement = (
   const { transmit } = useSettingsActions();
   const resetStore = useXBeeStore((state) => state.resetStore);
 
-  // Commands that should trigger GUI reset when sent to CanSat
-  // Only commands that actually restart/reset the CanSat mission
-  const RESET_TRIGGERING_COMMANDS = [
-    "START", // Start new mission
-    "RESET", // Reset request (from log file)
-    "RESET_CONFIRM", // Reset confirmation (from log file)
-    "SHUTDOWN", // Shutdown system (mission end)
-  ];
+  const RESET_TRIGGERING_COMMANDS = ["START", "RESET", "SHUTDOWN"];
+
+  const isCriticalCommand = (cmd: string): cmd is CriticalCommand => {
+    return CRITICAL_COMMANDS.includes(cmd as CriticalCommand);
+  };
+
+  const startConfirmationTimeout = (command: string) => {
+    let timeLeft = 30;
+
+    const updateTimer = () => {
+      timeLeft -= 1;
+      settingsState.setConfirmationState((prev) => ({
+        ...prev,
+        timeRemaining: timeLeft,
+      }));
+
+      if (timeLeft <= 0) {
+        // Timeout expired
+        settingsState.setConfirmationState({
+          isOpen: false,
+          command: null,
+          timeoutId: null,
+          timeRemaining: 30,
+        });
+        settingsState.setCommandStatus(
+          `CONFIRM:TIMEOUT_EXPIRED for ${command}`
+        );
+      }
+    };
+
+    const intervalId = setInterval(updateTimer, 1000);
+
+    settingsState.setConfirmationState((prev) => ({
+      ...prev,
+      timeoutId: intervalId,
+    }));
+
+    // Auto-clear after 30 seconds
+    setTimeout(() => {
+      clearInterval(intervalId);
+    }, 30000);
+  };
 
   const handleSendCommand = async (command: string) => {
     if (!command.trim()) return;
 
     try {
+      // Check if this is a critical command requiring confirmation
+      if (isCriticalCommand(command)) {
+        // Show confirmation dialog
+        settingsState.setConfirmationState({
+          isOpen: true,
+          command,
+          timeoutId: null,
+          timeRemaining: 30,
+        });
+        startConfirmationTimeout(command);
+        settingsState.setCommandStatus(`Confirmation required for: ${command}`);
+        return;
+      }
+
+      // Execute non-critical commands immediately
+      await executeCommand(command);
+    } catch (error) {
+      settingsState.setCommandStatus("Command transmission error");
+    }
+  };
+
+  const executeCommand = async (command: string) => {
+    try {
       // Special handling for START command - reset GUI first
       if (command === "START") {
         resetStore();
         settingsState.setCommandStatus("GUI reset for new mission");
-
-        // Small delay to let reset complete, then send command
         await new Promise((resolve) => setTimeout(resolve, 200));
       }
 
@@ -188,42 +242,61 @@ export const useCommandManagement = (
           RESET_TRIGGERING_COMMANDS.includes(command) &&
           command !== "START"
         ) {
-          // Reset the GUI store for other reset commands
           setTimeout(() => {
             resetStore();
             settingsState.setCommandStatus(
               `GUI reset triggered by: ${command}`
             );
-          }, 500); // Small delay to ensure command is sent first
+          }, 500);
         }
       } else {
         settingsState.setCommandStatus("Failed to send command");
       }
     } catch (error) {
-      settingsState.setCommandStatus("Command transmission error");
+      settingsState.setCommandStatus("Command execution error");
     }
   };
 
-  const handleResetRequest = async () => {
-    await handleSendCommand("RESET");
-    settingsState.setShowResetConfirm(true);
+  const handleConfirmCommand = async () => {
+    const { command, timeoutId } = settingsState.confirmationState;
 
-    // Set timeout for reset confirmation
-    const timeout = setTimeout(() => {
-      settingsState.setShowResetConfirm(false);
-      settingsState.setCommandStatus("Reset confirmation timeout");
-    }, TIMEOUTS.RESET_CONFIRM);
+    if (!command) return;
 
-    settingsState.setResetTimeout(timeout);
+    // Clear timeout
+    if (timeoutId) {
+      clearInterval(timeoutId);
+    }
+
+    // Close confirmation dialog
+    settingsState.setConfirmationState({
+      isOpen: false,
+      command: null,
+      timeoutId: null,
+      timeRemaining: 30,
+    });
+
+    // Send confirmation command
+    const confirmCommand = command;
+    await executeCommand(confirmCommand);
   };
 
-  const handleResetConfirm = async () => {
-    if (settingsState.resetTimeout) {
-      clearTimeout(settingsState.resetTimeout);
-      settingsState.setResetTimeout(null);
+  const handleCancelCommand = () => {
+    const { timeoutId } = settingsState.confirmationState;
+
+    // Clear timeout
+    if (timeoutId) {
+      clearInterval(timeoutId);
     }
-    settingsState.setShowResetConfirm(false);
-    await handleSendCommand("RESET_CONFIRM");
+
+    // Close confirmation dialog
+    settingsState.setConfirmationState({
+      isOpen: false,
+      command: null,
+      timeoutId: null,
+      timeRemaining: 30,
+    });
+
+    settingsState.setCommandStatus("Command cancelled by user");
   };
 
   const handleQnhSet = async (qnhValue: string) => {
@@ -232,8 +305,8 @@ export const useCommandManagement = (
 
   return {
     handleSendCommand,
-    handleResetRequest,
-    handleResetConfirm,
+    handleConfirmCommand,
+    handleCancelCommand,
     handleQnhSet,
   };
 };

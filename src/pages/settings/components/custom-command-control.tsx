@@ -1,7 +1,3 @@
-/**
- * Custom Command Control Component
- * Handles custom command input and status display using RHF and Zod
- */
 import React from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

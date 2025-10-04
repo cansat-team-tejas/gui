@@ -48,6 +48,33 @@ export interface XBeeReceiveFrame extends XBeeFrame {
   data: Uint8Array;
 }
 
+export interface XBeeExplicitRxFrame extends XBeeFrame {
+  type: 0x91;
+  source64: string;
+  source16: string;
+  sourceEndpoint: number;
+  destinationEndpoint: number;
+  clusterId: number;
+  profileId: number;
+  receiveOptions: number;
+  data: Uint8Array;
+}
+
+export interface ExplicitFrameMetadata {
+  sourceEndpoint: number;
+  destinationEndpoint: number;
+  clusterId: number;
+  profileId: number;
+}
+
+export interface ProcessedXBeeFrame {
+  type: number;
+  data: string;
+  explicitMetadata?: ExplicitFrameMetadata;
+  packetType?: "TELEMETRY" | "LOG" | "CMD_RESPONSE" | "UNKNOWN";
+  timestamp?: Date;
+}
+
 export interface XBeeATCommandFrame extends XBeeFrame {
   type: 0x08;
   command: string;
@@ -88,6 +115,7 @@ export const FRAME_ADDRESS_TYPES = {
   TX_REQUEST: 0x10,
   TX_STATUS: 0x8b,
   RX_PACKET: 0x90,
+  RX_EXPLICIT_PACKET: 0x91,
   RX_IO_PACKET: 0x92,
   AT_COMMAND: 0x08,
   AT_COMMAND_QUEUE: 0x09,
@@ -97,4 +125,5 @@ export const FRAME_ADDRESS_TYPES = {
   REMOTE_AT_RESPONSE: 0x97,
 } as const;
 
-export type FrameType = (typeof FRAME_TYPES)[keyof typeof FRAME_TYPES];
+export type XBeeFrameType =
+  (typeof FRAME_ADDRESS_TYPES)[keyof typeof FRAME_ADDRESS_TYPES];

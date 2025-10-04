@@ -41,6 +41,7 @@ export const getHealthSummary = (
   if (!status.gps) criticalIssues.push("GPS");
   if (!status.imu) criticalIssues.push("IMU");
   if (!status.power) criticalIssues.push("Power");
+  if (!status.rtc) criticalIssues.push("RTC");
 
   return {
     status,
@@ -93,32 +94,4 @@ export const shouldDeployParachute = (
 };
 
 // Command formatting helpers
-export const formatGroundStationCommand = (
-  command: GroundStationCommand,
-  value?: string
-): string => {
-  if (command.endsWith(":") && value) {
-    return `${command}${value}`;
-  }
-  return command;
-};
-
-export const parseCommandResponse = (
-  response: string
-): {
-  command: string;
-  status: "success" | "error" | "unknown";
-  message?: string;
-} => {
-  // Basic response parsing - can be extended based on firmware response format
-  const lines = response.split("\n").filter((line) => line.trim());
-  const lastLine = lines[lines.length - 1];
-
-  if (lastLine.includes("OK") || lastLine.includes("SUCCESS")) {
-    return { command: response, status: "success" };
-  } else if (lastLine.includes("ERROR") || lastLine.includes("FAIL")) {
-    return { command: response, status: "error", message: lastLine };
-  } else {
-    return { command: response, status: "unknown" };
-  }
-};
+// Removed unused functions: formatGroundStationCommand, parseCommandResponse

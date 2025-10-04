@@ -90,11 +90,11 @@ const CommunicationPanel = () => {
         value: (
           <div className="flex items-center gap-1">
             <div className={`text-white px-2 w-max ${rssiStatus.color}`}>
-              {rssiDownlink !== null ? Math.abs(rssiDownlink) : "N/A"}
+              {rssiDownlink !== null ? rssiDownlink : "N/A"}
               <SmallFont>dBm</SmallFont>
             </div>
             <div className="text-white px-2 w-max bg-green-600">
-              {rssiUplink !== null ? Math.abs(rssiUplink) : "N/A"}
+              {rssiUplink !== null ? rssiUplink : "N/A"}
               <SmallFont>dBm</SmallFont>
             </div>
           </div>

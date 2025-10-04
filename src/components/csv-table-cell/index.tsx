@@ -10,11 +10,17 @@ interface CsvTableCellProps {
 }
 
 const CsvTableCell: React.FC<CsvTableCellProps> = ({ value, fieldName }) => {
-  const formatValue = (val: any, field: keyof ICanSatTelemetryData): string => {
+  const formatValue = (
+    val: any,
+    field: keyof ICanSatTelemetryData | string
+  ): string => {
     if (val === null || val === undefined) return "";
 
-    switch (field) {
+    switch (field as string) {
       case "FLIGHT_STATE":
+        return `${val} (${getFlightStateName(val)})`;
+
+      case "FLIGHT_SOFTWARE_STATE":
         return `${val} (${getFlightStateName(val)})`;
 
       case "MISSION_TIME_S":
@@ -22,14 +28,18 @@ const CsvTableCell: React.FC<CsvTableCellProps> = ({ value, fieldName }) => {
 
       case "LATITUDE":
       case "LONGITUDE":
+      case "GNSS_LATITUDE":
+      case "GNSS_LONGITUDE":
         return val.toFixed(5);
 
       case "ALTITUDE":
       case "GPS_ALTITUDE":
+      case "GNSS_ALTITUDE":
       case "BARO_ALTITUDE":
         return `${val.toFixed(1)}m`;
 
       case "TEMP":
+      case "MCU_TEMP_C":
         return `${val.toFixed(1)}°C`;
 
       case "VOLTAGE":
@@ -63,9 +73,11 @@ const CsvTableCell: React.FC<CsvTableCellProps> = ({ value, fieldName }) => {
       case "PITCH":
       case "YAW":
       case "GYRO_SPIN":
+      case "GYRO_SPIN_RATE":
         return val.toFixed(2);
 
       case "AIR_QUALITY_PPM":
+      case "VOC_PPM":
       case "AQ_CO_PPM":
       case "AQ_CH4_PPM":
       case "AQ_NH3_PPM":
@@ -73,11 +85,49 @@ const CsvTableCell: React.FC<CsvTableCellProps> = ({ value, fieldName }) => {
       case "AQ_ETHANOL_PPM":
         return `${val.toFixed(1)}ppm`;
 
-      case "MCU_TEMP_C":
-        return `${val.toFixed(1)}°C`;
+      // MCU Monitoring fields (legacy/optional)
+      case "MCU_FREE_RAM" as any:
+      case "MCU_TOTAL_RAM" as any:
+      case "MCU_STACK_FREE" as any:
+        return `${(val / 1024).toFixed(1)}KB`;
+
+      case "MCU_FREE_FLASH" as any:
+        return `${(val / 1024 / 1024).toFixed(1)}MB`;
+
+      case "MCU_RAM_USAGE_PERCENT" as any:
+      case "MCU_CPU_USAGE_PERCENT" as any:
+        return `${val.toFixed(1)}%`;
+
+      case "MCU_UPTIME_SECONDS" as any:
+        const hours = Math.floor(val / 3600);
+        const minutes = Math.floor((val % 3600) / 60);
+        const seconds = val % 60;
+        return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds
+          .toString()
+          .padStart(2, "0")}`;
+
+      case "MCU_CPU_FREQUENCY_MHZ" as any:
+        return `${val.toFixed(0)}MHz`;
 
       case "HEALTH_FLAGS":
         return `0x${val.toString(16).toUpperCase().padStart(4, "0")}`;
+
+      // Timestamp fields
+      case "ISO_TIMESTAMP":
+      case "MISSION_TIMESTAMP":
+      case "GNSS_TIME":
+        if (!val || val === "") return "";
+        return val.toString().substring(0, 19); // Truncate for display
+
+      case "RTC_TIME_VALID":
+        return val === "1" ? "VALID" : "INVALID";
+
+      case "RTC_MODULE_VALID":
+        return val === 1 ? "VALID" : "INVALID";
+
+      case "RTC_LAST_SYNC":
+        if (val === 0) return "Never";
+        return `${(val / 1000).toFixed(0)}s ago`;
 
       case "LOG_DATA":
         if (!val || val === "") return "";
@@ -124,8 +174,9 @@ const CsvTableCell: React.FC<CsvTableCellProps> = ({ value, fieldName }) => {
     let baseClass =
       "flex items-center justify-center h-[25px] px-2 py-1 border-b border-black text-[10px] font-bold text-black text-center bg-white hover:bg-gray-50 transition-colors";
 
-    switch (fieldName) {
+    switch (fieldName as unknown as string) {
       case "FLIGHT_STATE":
+      case "FLIGHT_SOFTWARE_STATE":
         const stateColors: Record<number, string> = {
           0: "bg-gray-100", // BOOT
           1: "bg-yellow-100", // TEST_MODE

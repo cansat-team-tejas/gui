@@ -6,6 +6,7 @@ import { AutoConnectButton } from "../../components/auto-connect-button";
 import { GuiResetButton } from "../../components/gui-reset-button";
 import { RSSIPollingControl } from "../../components/rssi-polling-control";
 import Panel from "../../components/panel";
+import ConfirmationDialog from "../../components/confirmation-dialog";
 import {
   useIsConnected,
   useAvailablePorts,
@@ -20,7 +21,6 @@ import {
   ConnectionControls,
   CustomCommandControl,
   CommandCategory,
-  QnhControl,
 } from "./components";
 
 // Settings hooks and constants
@@ -35,7 +35,11 @@ import {
   EMERGENCY_COMMANDS,
   CALIBRATION_COMMANDS,
   FLIGHT_CONTROL_COMMANDS,
+  REACTION_WHEEL_COMMANDS,
   SD_CARD_COMMANDS,
+  RTC_TIME_COMMANDS,
+  MCU_MONITORING_COMMANDS,
+  HARDWARE_RESET_COMMANDS,
 } from "./constants";
 
 const SettingsPage: React.FC = () => {
@@ -54,7 +58,7 @@ const SettingsPage: React.FC = () => {
     settingsState,
     selectedPort
   );
-  const { handleSendCommand, handleQnhSet } =
+  const { handleSendCommand, handleConfirmCommand, handleCancelCommand } =
     useCommandManagement(settingsState);
 
   // Connection status object
@@ -138,16 +142,10 @@ const SettingsPage: React.FC = () => {
               defaultCollapsed
             >
               <div className="space-y-6">
-                {/* Custom Command Input */}
-                <div>
-                  <div className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">
-                    Custom Command
-                  </div>
-                  <CustomCommandControl
-                    commandStatus={settingsState.commandStatus}
-                    onSendCommand={handleSendCommand}
-                  />
-                </div>
+                <CustomCommandControl
+                  commandStatus={settingsState.commandStatus}
+                  onSendCommand={handleSendCommand}
+                />
 
                 {/* Command Categories */}
                 <div className="grid grid-cols-1 gap-6">
@@ -172,40 +170,69 @@ const SettingsPage: React.FC = () => {
                     onSendCommand={handleSendCommand}
                   />
 
-                  {/* Flight Control Commands */}
-                  <div>
-                    <div className="text-xs font-semibold text-gray-700 mb-3 uppercase tracking-wide">
-                      Flight Control
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {FLIGHT_CONTROL_COMMANDS.map((cmd, index) => (
-                        <button
-                          key={index}
-                          onClick={() => handleSendCommand(cmd.command)}
-                          className="bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded px-3 py-2 text-xs font-medium text-gray-700 transition-colors duration-150"
-                          title={cmd.command}
-                        >
-                          {cmd.label}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="mt-3">
-                      <QnhControl onQnhSet={handleQnhSet} />
-                    </div>
-                  </div>
+                  <CommandCategory
+                    title="RTC TIME MANAGEMENT"
+                    commands={RTC_TIME_COMMANDS}
+                    type="system"
+                    onSendCommand={handleSendCommand}
+                  />
 
                   <CommandCategory
-                    title="SD CARD"
-                    commands={SD_CARD_COMMANDS}
-                    type="sdcard"
+                    title="MCU MONITORING"
+                    commands={MCU_MONITORING_COMMANDS}
+                    type="system"
+                    onSendCommand={handleSendCommand}
+                  />
+
+                  <CommandCategory
+                    title="HARDWARE RESET"
+                    commands={HARDWARE_RESET_COMMANDS}
+                    type="system"
+                    onSendCommand={handleSendCommand}
+                  />
+
+                  <CommandCategory
+                    title="FLIGHT CONTROL"
+                    commands={FLIGHT_CONTROL_COMMANDS}
+                    type="flight"
+                    onSendCommand={handleSendCommand}
+                  />
+
+                  <CommandCategory
+                    title="REACTION WHEEL"
+                    commands={REACTION_WHEEL_COMMANDS}
+                    type="system"
                     onSendCommand={handleSendCommand}
                   />
                 </div>
+
+                <CommandCategory
+                  title="SD CARD"
+                  commands={SD_CARD_COMMANDS}
+                  type="sdcard"
+                  onSendCommand={handleSendCommand}
+                />
               </div>
             </Panel>
           )}
         </div>
       </div>
+
+      {/* Critical Command Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={settingsState.confirmationState.isOpen}
+        title="CRITICAL COMMAND CONFIRMATION"
+        message={
+          settingsState.confirmationState.command
+            ? `Are you sure you want to send the critical command: ${settingsState.confirmationState.command}?\n\nThis command will be executed immediately upon confirmation and may affect flight operations.`
+            : ""
+        }
+        confirmText={`SEND COMMAND (${settingsState.confirmationState.timeRemaining}s)`}
+        cancelText="CANCEL"
+        onConfirm={handleConfirmCommand}
+        onCancel={handleCancelCommand}
+        isDangerous={true}
+      />
     </div>
   );
 };

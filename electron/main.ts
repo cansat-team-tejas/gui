@@ -161,8 +161,51 @@ ipcMain.handle("serial:open", async (event, portPath: string, options: any) => {
             : null,
           timestamp: new Date(),
         });
+      } else if (frame.type === 0x90 || frame.type === 0x91) {
+        // Standard (0x90) or Explicit (0x91) RX frames
+        // Both frame types can carry telemetry/command data
+        if (frame.data && Buffer.isBuffer(frame.data)) {
+          // Guard against zero-length payloads
+          if (frame.data.length === 0) {
+            console.warn(
+              `Received empty ${
+                frame.type === 0x91 ? "explicit" : "standard"
+              } RX frame`
+            );
+            return;
+          }
+
+          // Convert buffer to string for text-based telemetry
+          frame.data = frame.data.toString();
+
+          // For explicit frames (0x91), include cluster ID for packet type filtering
+          if (frame.type === 0x91) {
+            // Cluster ID mapping (matches firmware packet types):
+            // 0x0001 = TELEMETRY
+            // 0x0002 = LOG
+            // 0x0003 = CMD_RESPONSE
+            frame.explicitMetadata = {
+              sourceEndpoint: frame.sourceEndpoint,
+              destinationEndpoint: frame.destinationEndpoint,
+              clusterId: frame.clusterId,
+              profileId: frame.profileId,
+            };
+            
+            // Add packet type hint based on cluster ID for easier processing
+            if (frame.clusterId === 0x0001) {
+              frame.packetType = "TELEMETRY";
+            } else if (frame.clusterId === 0x0002) {
+              frame.packetType = "LOG";
+            } else if (frame.clusterId === 0x0003) {
+              frame.packetType = "CMD_RESPONSE";
+            } else {
+              frame.packetType = "UNKNOWN";
+            }
+          }
+        }
+        mainWindow?.webContents.send("xbee:frame-received", frame);
       } else {
-        // Other frames (telemetry data) - convert to string
+        // Other frame types - pass through as-is
         if (frame.data && Buffer.isBuffer(frame.data)) {
           frame.data = frame.data.toString();
         }

@@ -35,6 +35,7 @@ export type CommandFormData = z.infer<typeof commandFormSchema>;
 // CSV Search Form Schema
 export const csvSearchSchema = z.object({
   searchTerm: z.string().optional(),
+  searchColumn: z.string().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   missionTimeStart: z.string().optional(),

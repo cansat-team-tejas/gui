@@ -1,8 +1,8 @@
-import { TableColumn } from "../components/csv-data-table";
+import { TableColumn, ICanSatTelemetryData } from "../data/csv-data";
 
-export function exportToCsv<T>(
-  data: T[],
-  columns: TableColumn<T>[],
+export function exportToCsv(
+  data: ICanSatTelemetryData[],
+  columns: TableColumn[],
   filename: string = "data.csv"
 ): void {
   const csvContent =

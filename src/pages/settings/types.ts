@@ -15,6 +15,13 @@ export interface CommandCategory {
   danger?: boolean;
 }
 
+export interface ConfirmationState {
+  isOpen: boolean;
+  command: string | null;
+  timeoutId: NodeJS.Timeout | null;
+  timeRemaining: number;
+}
+
 export interface SettingsState {
   isScanning: boolean;
   isConnecting: boolean;
@@ -22,7 +29,15 @@ export interface SettingsState {
   commandStatus: string;
   showResetConfirm: boolean;
   resetTimeout: NodeJS.Timeout | null;
+  confirmationState: ConfirmationState;
 }
+
+export type CriticalCommand =
+  | "EMERGENCY"
+  | "SHUTDOWN"
+  | "PARACHUTE_DEPLOY"
+  | "START"
+  | "RESET";
 
 export interface ConnectionStatus {
   isConnected: boolean;

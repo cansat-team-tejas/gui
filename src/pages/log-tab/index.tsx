@@ -11,7 +11,7 @@ const LogTab = () => {
   const [autoScroll, setAutoScroll] = useState(true);
 
   const handleClear = () => {
-    console.log("Clear all logs/commands");
+    // Clear all logs/commands
   };
 
   return (

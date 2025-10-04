@@ -11,7 +11,6 @@ export const useAIService = () => {
     async (command: string): Promise<string> => {
       // Here you would integrate with your command execution system
       // For now, we'll simulate it
-      console.log(`AI executing command: ${command}`);
 
       // You would call your actual command execution function here
       // await onCommand({ command, teamId: "2024" });
