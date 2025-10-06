@@ -10,3 +10,4 @@ export { default as ConnectionControls } from "./connection-controls";
 export { default as CustomCommandControl } from "./custom-command-control";
 export { default as CommandCategory } from "./command-category";
 export { default as ResetControl } from "./reset-control";
+export { default as AIServiceConfig } from "./ai-service-config";

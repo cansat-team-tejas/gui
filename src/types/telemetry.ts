@@ -1,7 +1,7 @@
 /**
  * Telemetry data type definitions
  */
-import type { FrameType } from "../constants";
+import type { FLIGHT_STATES, FrameType } from "../constants";
 
 // Basic telemetry data interface - matches the actual CSV data format
 export interface ITelemetryType {
@@ -22,7 +22,7 @@ export interface ITelemetryType {
   ACCEL_Y: number;
   ACCEL_Z: number;
   GYRO_SPIN_RATE: number;
-  FLIGHT_STATE?: number; // New primary field name
+  FLIGHT_STATE?: keyof typeof FLIGHT_STATES; // New primary field name
   GYRO_X: number;
   GYRO_Y: number;
   GYRO_Z: number;

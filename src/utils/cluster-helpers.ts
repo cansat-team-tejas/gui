@@ -23,33 +23,11 @@ export const getPacketTypeFromClusterId = (
 };
 
 /**
- * Check if cluster ID is valid
- */
-export const isValidClusterId = (clusterId: number): boolean => {
-  return Object.values(CLUSTER_IDS).includes(clusterId as any);
-};
-
-/**
  * Get cluster name for logging
  */
 export const getClusterName = (clusterId: number): string => {
   const type = getPacketTypeFromClusterId(clusterId);
-  return type === "UNKNOWN" ? `UNKNOWN_0x${clusterId.toString(16).toUpperCase()}` : type;
-};
-
-/**
- * Format explicit frame metadata for display
- */
-export const formatExplicitMetadata = (metadata: {
-  sourceEndpoint: number;
-  destinationEndpoint: number;
-  clusterId: number;
-  profileId: number;
-}): string => {
-  return [
-    `SrcEP:0x${metadata.sourceEndpoint.toString(16).toUpperCase()}`,
-    `DstEP:0x${metadata.destinationEndpoint.toString(16).toUpperCase()}`,
-    `Cluster:0x${metadata.clusterId.toString(16).toUpperCase()}`,
-    `Profile:0x${metadata.profileId.toString(16).toUpperCase()}`,
-  ].join(" ");
+  return type === "UNKNOWN"
+    ? `UNKNOWN_0x${clusterId.toString(16).toUpperCase()}`
+    : type;
 };

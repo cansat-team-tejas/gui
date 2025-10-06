@@ -1,5 +1,7 @@
 import { useCallback } from "react";
 import { MissionContext } from "./use-mission-context";
+import { useSettingsState } from "../../settings/hooks";
+import { createMCPService } from "../../../utils/mcp-service";
 
 export interface AIResponse {
   response: string;
@@ -7,6 +9,8 @@ export interface AIResponse {
 }
 
 export const useAIService = () => {
+  const settingsState = useSettingsState();
+
   const executeCommand = useCallback(
     async (command: string): Promise<string> => {
       // Here you would integrate with your command execution system
@@ -25,133 +29,156 @@ export const useAIService = () => {
       userMessage: string,
       context: MissionContext
     ): Promise<AIResponse> => {
-      // Mock AI processing - in real implementation, this would call your AI service
-      const lowerMessage = userMessage.toLowerCase();
+      // Call remote MCP AI service (/ask) if available
+      try {
+        const port = settingsState?.aiServicePort || 8000;
+        const filename = settingsState?.currentDatabaseFilename || "mission.db";
 
-      if (lowerMessage.includes("start") && lowerMessage.includes("cansat")) {
-        await executeCommand("START");
+        const mcpService = createMCPService(port);
+        const response = await mcpService.askQuestion(userMessage, filename);
+
+        // The service returns { answer: { content }, command }
+        const answer =
+          typeof response.answer === "string"
+            ? response.answer
+            : response.answer?.content || "";
+        const command = response.command || null;
+
+        console.log("AI Service Response:", { answer, command });
+
+        if (command) {
+          console.log(
+            "Command detected, opening confirmation dialog:",
+            command
+          );
+          // Start timeout countdown
+          let timeLeft = 30;
+          const updateTimer = () => {
+            timeLeft -= 1;
+            settingsState.setConfirmationState((prev) => ({
+              ...prev,
+              timeRemaining: timeLeft,
+            }));
+
+            if (timeLeft <= 0) {
+              // Timeout expired
+              settingsState.setConfirmationState({
+                isOpen: false,
+                command: null,
+                timeoutId: null,
+                timeRemaining: 30,
+              });
+            }
+          };
+
+          const intervalId = setInterval(updateTimer, 1000);
+
+          // Set initial confirmation state with timeout
+          settingsState.setConfirmationState({
+            isOpen: true,
+            command,
+            timeoutId: intervalId,
+            timeRemaining: 30,
+          });
+
+          console.log("Confirmation dialog state set:", {
+            isOpen: true,
+            command,
+            timeRemaining: 30,
+          });
+
+          // Auto-clear after 30 seconds
+          setTimeout(() => {
+            clearInterval(intervalId);
+          }, 30000);
+
+          return { response: answer, commandExecuted: command };
+        }
+
+        return { response: answer };
+      } catch (err) {
+        // Fallback to local heuristics if the AI service is unavailable
+        console.warn(
+          "AI service call failed, falling back to local logic:",
+          err
+        );
+        const lowerMessage = userMessage.toLowerCase();
+
+        // Add test command for debugging
+        if (lowerMessage.includes("test command")) {
+          const testCommand = "TEST";
+          console.log(
+            "Test command detected, opening confirmation dialog:",
+            testCommand
+          );
+
+          // Start timeout countdown
+          let timeLeft = 30;
+          const updateTimer = () => {
+            timeLeft -= 1;
+            settingsState.setConfirmationState((prev) => ({
+              ...prev,
+              timeRemaining: timeLeft,
+            }));
+
+            if (timeLeft <= 0) {
+              settingsState.setConfirmationState({
+                isOpen: false,
+                command: null,
+                timeoutId: null,
+                timeRemaining: 30,
+              });
+            }
+          };
+
+          const intervalId = setInterval(updateTimer, 1000);
+
+          settingsState.setConfirmationState({
+            isOpen: true,
+            command: testCommand,
+            timeoutId: intervalId,
+            timeRemaining: 30,
+          });
+
+          setTimeout(() => {
+            clearInterval(intervalId);
+          }, 30000);
+
+          return {
+            response:
+              "Test command detected! Please confirm to execute the TEST command.",
+            commandExecuted: testCommand,
+          };
+        }
+
+        if (lowerMessage.includes("start") && lowerMessage.includes("cansat")) {
+          await executeCommand("START");
+          return {
+            response:
+              "I've sent the START command to the CanSat. The mission should begin shortly. I'll monitor the telemetry data for you.",
+            commandExecuted: "START",
+          };
+        }
+
+        if (
+          lowerMessage.includes("stop") ||
+          lowerMessage.includes("emergency")
+        ) {
+          await executeCommand("EMERGENCY");
+          return {
+            response:
+              "Emergency command sent! The CanSat has been instructed to stop current operations.",
+            commandExecuted: "EMERGENCY",
+          };
+        }
+
+        // Basic status reply as fallback
         return {
-          response:
-            "I've sent the START command to the CanSat. The mission should begin shortly. I'll monitor the telemetry data for you.",
-          commandExecuted: "START",
+          response: `Unable to reach AI service. Quick status: Connection: ${
+            context.isConnected ? "Connected" : "Disconnected"
+          }, Mission time: ${context.telemetry.missionTime.toFixed(1)}s`,
         };
       }
-
-      if (lowerMessage.includes("stop") || lowerMessage.includes("emergency")) {
-        await executeCommand("EMERGENCY");
-        return {
-          response:
-            "Emergency command sent! The CanSat has been instructed to stop current operations.",
-          commandExecuted: "EMERGENCY",
-        };
-      }
-
-      if (
-        lowerMessage.includes("status") ||
-        (lowerMessage.includes("how") && lowerMessage.includes("doing"))
-      ) {
-        return {
-          response: `Current CanSat Status:
-• Connection: ${context.isConnected ? "Connected" : "Disconnected"}
-• Altitude: ${context.telemetry.altitude.toFixed(
-            1
-          )}m (Barometric), ${context.telemetry.gpsAltitude.toFixed(1)}m (GPS)
-• Temperature: ${context.telemetry.temperature.toFixed(1)}°C
-• Mission Time: ${context.telemetry.missionTime.toFixed(1)}s
-• GPS Satellites: ${context.telemetry.satellites}
-• Signal Strength: ${context.systemStatus.rssi}dBm
-• Air Quality: ${context.systemStatus.airQuality.toFixed(1)} PPM
-
-Everything looks ${
-            context.isConnected ? "good" : "concerning - no connection"
-          }!`,
-        };
-      }
-
-      if (lowerMessage.includes("altitude")) {
-        return {
-          response: `Current altitude readings:
-• Barometric Altitude: ${context.telemetry.altitude.toFixed(1)} meters
-• GPS Altitude: ${context.telemetry.gpsAltitude.toFixed(1)} meters
-• Difference: ${Math.abs(
-            context.telemetry.altitude - context.telemetry.gpsAltitude
-          ).toFixed(1)}m
-
-${
-  context.telemetry.altitude > 1000
-    ? "CanSat is at significant altitude!"
-    : "CanSat is at low altitude."
-}`,
-        };
-      }
-
-      if (
-        lowerMessage.includes("gps") ||
-        lowerMessage.includes("coordinates")
-      ) {
-        return {
-          response: `GPS Information:
-• Coordinates: ${context.telemetry.coordinates.lat.toFixed(
-            6
-          )}°N, ${context.telemetry.coordinates.lon.toFixed(6)}°E
-• GPS Altitude: ${context.telemetry.gpsAltitude.toFixed(1)} meters
-• Satellites: ${context.telemetry.satellites} satellites in view
-• GPS Status: ${
-            context.telemetry.satellites >= 4
-              ? "Good GPS lock"
-              : "Poor GPS signal"
-          }`,
-        };
-      }
-
-      if (
-        lowerMessage.includes("temperature") ||
-        lowerMessage.includes("temp")
-      ) {
-        return {
-          response: `Temperature Monitoring:
-• Current Temperature: ${context.telemetry.temperature.toFixed(1)}°C
-• Status: ${
-            context.telemetry.temperature < 0
-              ? "Below freezing"
-              : context.telemetry.temperature > 30
-              ? "High temperature"
-              : "Normal range"
-          }
-• Humidity: ${context.telemetry.humidity.toFixed(1)}%`,
-        };
-      }
-
-      if (
-        lowerMessage.includes("diagnostic") ||
-        lowerMessage.includes("system")
-      ) {
-        return {
-          response: `System Diagnostics:
-• Power: ${context.telemetry.voltage.toFixed(1)}V
-• Signal: ${context.systemStatus.rssi}dBm
-• Mission Time: ${(context.telemetry.missionTime / 60).toFixed(1)} minutes
-• Air Quality: ${context.systemStatus.airQuality.toFixed(1)} PPM
-• System Health: ${
-            context.isConnected && context.telemetry.voltage > 3.0
-              ? "Good"
-              : "Check required"
-          }`,
-        };
-      }
-
-      // Default response
-      return {
-        response: `Based on the current mission data, I can help you with:
-• Mission status and telemetry analysis
-• Sending commands (START, STOP, EMERGENCY, etc.)
-• Data interpretation and insights
-• System monitoring and alerts
-
-Current mission time: ${context.telemetry.missionTime.toFixed(
-          1
-        )}s. What would you like to know or do?`,
-      };
     },
     [executeCommand]
   );

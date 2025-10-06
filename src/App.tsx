@@ -13,10 +13,14 @@ import AITab from "./pages/ai-tab";
 import { QueryProvider } from "./providers/query-provider";
 import { CLUSTER_IDS } from "./constants";
 import { getClusterName } from "./utils/cluster-helpers";
+import { useMCPIntegration } from "./hooks/use-mcp-integration";
 
 const App = () => {
   const processFrame = useXBeeStore((state) => state.processFrame);
   const processATResponse = useXBeeStore((state) => state.processATResponse);
+
+  // Initialize MCP integration for automatic telemetry insertion
+  useMCPIntegration();
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -43,12 +47,11 @@ const App = () => {
             // 0x0001 = TELEMETRY
             // 0x0002 = LOG
             // 0x0003 = CMD_RESPONSE
-            
+
             if (frame.explicitMetadata?.clusterId) {
-              // Explicit frame (0x91) with cluster ID - filter by packet type
               const clusterId = frame.explicitMetadata.clusterId;
               const clusterName = getClusterName(clusterId);
-              
+
               switch (clusterId) {
                 case CLUSTER_IDS.TELEMETRY: // 0x0001
                   processFrame(frame.data);

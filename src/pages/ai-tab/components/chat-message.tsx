@@ -21,6 +21,42 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = memo(({ message }) => {
     });
   };
 
+  // Function to parse and highlight **text** patterns and * bullet points
+  const parseAndHighlight = (text: string) => {
+    // First split by **text** pattern while preserving the delimiters
+    const boldParts = text.split(/(\*\*[^*]+\*\*)/);
+
+    return boldParts.map((part, boldIndex) => {
+      // Check if this part is wrapped in **
+      if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
+        // Remove ** from start and end, then make bold
+        const boldText = part.slice(2, -2);
+        return (
+          <span key={boldIndex} className="font-bold">
+            {boldText}
+          </span>
+        );
+      }
+
+      // For regular text, check for bullet points (single *)
+      const bulletParts = part.split(/(\n\* )/);
+
+      return bulletParts.map((bulletPart, bulletPartIndex) => {
+        if (bulletPart === "\n* ") {
+          // Replace bullet point marker with actual bullet
+          return (
+            <span key={`${boldIndex}-${bulletPartIndex}`}>
+              <br />•
+            </span>
+          );
+        }
+        return (
+          <span key={`${boldIndex}-${bulletPartIndex}`}>{bulletPart}</span>
+        );
+      });
+    });
+  };
+
   return (
     <div
       className={`flex ${
@@ -35,7 +71,7 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = memo(({ message }) => {
         }`}
       >
         <div className="text-[12px] leading-relaxed whitespace-pre-wrap font-medium">
-          {message.content}
+          {parseAndHighlight(message.content)}
         </div>
         <div className="flex items-center justify-between mt-2 gap-2">
           <div

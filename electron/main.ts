@@ -190,7 +190,7 @@ ipcMain.handle("serial:open", async (event, portPath: string, options: any) => {
               clusterId: frame.clusterId,
               profileId: frame.profileId,
             };
-            
+
             // Add packet type hint based on cluster ID for easier processing
             if (frame.clusterId === 0x0001) {
               frame.packetType = "TELEMETRY";

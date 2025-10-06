@@ -30,7 +30,6 @@ function CsvDataTable({}: CsvDataTableProps) {
     searchField: searchColumnValue
       ? (searchColumnValue as keyof ICanSatTelemetryData)
       : undefined,
-    // No column sorting here; hook enforces newest-first by default
   });
 
   const parentRef = useRef<HTMLDivElement>(null);

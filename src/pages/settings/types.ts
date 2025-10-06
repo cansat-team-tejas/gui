@@ -30,6 +30,9 @@ export interface SettingsState {
   showResetConfirm: boolean;
   resetTimeout: NodeJS.Timeout | null;
   confirmationState: ConfirmationState;
+  // AI service configuration
+  aiServicePort: number;
+  currentDatabaseFilename: string | null;
 }
 
 export type CriticalCommand =

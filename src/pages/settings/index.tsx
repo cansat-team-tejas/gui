@@ -22,6 +22,7 @@ import {
   CustomCommandControl,
   CommandCategory,
 } from "./components";
+import { AIServiceConfig } from "./components";
 
 // Settings hooks and constants
 import {
@@ -120,6 +121,13 @@ const SettingsPage: React.FC = () => {
               onScanPorts={handleScanPorts}
               onPortSelect={setSelectedPort}
             />
+
+            <div className="mt-4">
+              <AIServiceConfig
+                port={settingsState.aiServicePort}
+                onPortChange={(p) => settingsState.setAiServicePort(p)}
+              />
+            </div>
           </Panel>
 
           {/* Manual Connection Section */}

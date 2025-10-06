@@ -16,6 +16,10 @@ import {
   useTransmit,
 } from "../../hooks/use-xbee";
 import { useXBeeStore } from "../../store/xbee";
+import {
+  createMCPService,
+  generateMissionFilename,
+} from "../../utils/mcp-service";
 
 export const useSettingsState = (): SettingsState & {
   setIsScanning: (scanning: boolean) => void;
@@ -27,6 +31,12 @@ export const useSettingsState = (): SettingsState & {
   setConfirmationState: (
     state: ConfirmationState | ((prev: ConfirmationState) => ConfirmationState)
   ) => void;
+  // AI service port
+  aiServicePort: number;
+  setAiServicePort: (port: number) => void;
+  // Database filename
+  currentDatabaseFilename: string | null;
+  setCurrentDatabaseFilename: (filename: string | null) => void;
 } => {
   const [isScanning, setIsScanning] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -42,6 +52,12 @@ export const useSettingsState = (): SettingsState & {
       timeRemaining: 30,
     }
   );
+  // AI service port (default 8000)
+  const [aiServicePort, setAiServicePort] = useState<number>(8000);
+  // Current database filename for MCP service
+  const [currentDatabaseFilename, setCurrentDatabaseFilename] = useState<
+    string | null
+  >(null);
 
   return {
     isScanning,
@@ -51,6 +67,8 @@ export const useSettingsState = (): SettingsState & {
     showResetConfirm,
     resetTimeout,
     confirmationState,
+    aiServicePort,
+    currentDatabaseFilename,
     setIsScanning,
     setIsConnecting,
     setConnectionStatus,
@@ -58,6 +76,8 @@ export const useSettingsState = (): SettingsState & {
     setShowResetConfirm,
     setResetTimeout,
     setConfirmationState,
+    setAiServicePort,
+    setCurrentDatabaseFilename,
   };
 };
 
@@ -226,11 +246,27 @@ export const useCommandManagement = (
 
   const executeCommand = async (command: string) => {
     try {
-      // Special handling for START command - reset GUI first
+      // Special handling for START command - reset GUI first and create new database
       if (command === "START") {
         resetStore();
         settingsState.setCommandStatus("GUI reset for new mission");
         await new Promise((resolve) => setTimeout(resolve, 200));
+
+        // Create new database file for this mission
+        try {
+          const newFilename = generateMissionFilename("TEJAS");
+          const mcpService = createMCPService(settingsState.aiServicePort);
+          await mcpService.createDatabase(newFilename);
+          settingsState.setCurrentDatabaseFilename(newFilename);
+          settingsState.setCommandStatus(
+            `New mission database created: ${newFilename}`
+          );
+        } catch (error) {
+          console.warn("Failed to create mission database:", error);
+          settingsState.setCommandStatus(
+            "Database creation failed, continuing with command"
+          );
+        }
       }
 
       const success = await transmit(command);
