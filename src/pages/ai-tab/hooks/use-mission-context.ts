@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import { useXBeeStore, xbeeSelectors } from "../../../store/xbee";
-import { useTelemetryLatest } from "../../../hooks/use-xbee";
+import { useXBeeGoStore, xbeeGoSelectors } from "../../../store/xbee-go";
+import { useTelemetryLatest } from "../../../hooks/use-xbee-go";
 import { getSafeTelemetryData } from "../../../utils/telemetry-helpers";
 
 export interface MissionContext {
@@ -28,12 +28,12 @@ export interface MissionContext {
 }
 
 export const useMissionContext = (): MissionContext => {
-  const isConnected = useXBeeStore(xbeeSelectors.isConnected);
+  const isConnected = useXBeeGoStore(xbeeGoSelectors.isConnected);
   const latestTelemetry = useTelemetryLatest();
 
   // Use existing selectors to prevent unnecessary re-renders
-  const allCommandHistory = useXBeeStore(xbeeSelectors.commandEchoHistory);
-  const allLogEntries = useXBeeStore(xbeeSelectors.logEntries);
+  const allCommandHistory = useXBeeGoStore(xbeeGoSelectors.commandEchoHistory);
+  const allLogEntries = useXBeeGoStore(xbeeGoSelectors.logEntries);
 
   // Slice the arrays with memoization
   const commandHistory = useMemo(

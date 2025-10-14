@@ -1,7 +1,7 @@
 /**
  * Telemetry data type definitions
  */
-import type { FLIGHT_STATES, FrameType } from "../constants";
+import type { FLIGHT_STATES } from "../constants";
 
 // Basic telemetry data interface - matches the actual CSV data format
 export interface ITelemetryType {
@@ -115,13 +115,6 @@ export interface ILogEntryType {
 export type TelemetryData = ITelemetryType;
 export type CommandEcho = ICommandType;
 export type LogEntry = ILogEntryType;
-
-export interface ParsedFrame {
-  type: FrameType;
-  timestamp: Date;
-  data: any;
-  raw: string;
-}
 
 export interface TelemetryState {
   latest: ITelemetryType;

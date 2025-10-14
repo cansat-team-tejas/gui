@@ -1,5 +1,5 @@
 import React from "react";
-import { useXBeeStore, xbeeSelectors } from "../../store/xbee";
+import { useXBeeGoStore, xbeeGoSelectors } from "../../store/xbee-go";
 import LabelValue from "../label-value";
 
 interface RSSIDisplayProps {
@@ -7,9 +7,9 @@ interface RSSIDisplayProps {
 }
 
 export const RSSIDisplay: React.FC<RSSIDisplayProps> = ({ className = "" }) => {
-  const uplinkRSSI = useXBeeStore(xbeeSelectors.rssiUplink);
-  const downlinkRSSI = useXBeeStore(xbeeSelectors.rssiDownlink);
-  const lastUpdate = useXBeeStore(xbeeSelectors.rssiLastUpdate);
+  const uplinkRSSI = useXBeeGoStore(xbeeGoSelectors.rssiUplink);
+  const downlinkRSSI = useXBeeGoStore(xbeeGoSelectors.rssiDownlink);
+  const lastUpdate = useXBeeGoStore(xbeeGoSelectors.rssiLastUpdate);
 
   const formatRSSI = (rssi: number | null) => {
     if (rssi === null) return "N/A";

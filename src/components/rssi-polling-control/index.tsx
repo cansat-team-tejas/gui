@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useXBeeStore, xbeeSelectors } from "../../store/xbee";
+import { useXBeeGoStore, xbeeGoSelectors } from "../../store/xbee-go";
 import Button from "../button";
 
 interface RSSIPollingControlProps {
@@ -9,19 +9,19 @@ interface RSSIPollingControlProps {
 export const RSSIPollingControl: React.FC<RSSIPollingControlProps> = ({
   className = "",
 }) => {
-  const isConnected = useXBeeStore(xbeeSelectors.isConnected);
-  const isPollingActive = useXBeeStore(
+  const isConnected = useXBeeGoStore(xbeeGoSelectors.isConnected);
+  const isPollingActive = useXBeeGoStore(
     (state) => state.communication.rssiPolling.isActive
   );
-  const pollingInterval = useXBeeStore(
+  const pollingInterval = useXBeeGoStore(
     (state) => state.communication.rssiPolling.interval
   );
-  const lastPollTime = useXBeeStore(
+  const lastPollTime = useXBeeGoStore(
     (state) => state.communication.rssiPolling.lastPollTime
   );
 
-  const startRSSIPolling = useXBeeStore((state) => state.startRSSIPolling);
-  const stopRSSIPolling = useXBeeStore((state) => state.stopRSSIPolling);
+  const startRSSIPolling = useXBeeGoStore((state) => state.startRSSIPolling);
+  const stopRSSIPolling = useXBeeGoStore((state) => state.stopRSSIPolling);
 
   const [intervalInput, setIntervalInput] = useState(5000); // Default 5 seconds
 

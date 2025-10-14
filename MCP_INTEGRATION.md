@@ -1,212 +1,129 @@
-# Go Fiber Telemetry Service
+go mod tidy
+go run ./cmd
 
-This Go application provides a REST API for CanSat telemetry data management and AI-assisted querying. It uses [Fiber](https://gofiber.io/) as the web framework, GORM for database operations, and integrates with Hugging Face for AI-powered responses.
+# MCP / XBee Go Backend Integration
 
-## Features
+The Go backend exposes a single mission-control service that manages XBee telemetry, mission databases, and AI assistance. It now uses [Fiber](https://gofiber.io/) with Ollama-powered responses and an auto-managed mission pipeline.
 
-- **Multi-database support**: Each API request specifies a database file via the `filename` parameter
-- **AI-powered Q&A**: Natural language queries about telemetry data with automatic SQL generation
-- **Command detection**: Recognizes GS (Ground Station) commands and provides formatted responses
-- **Conversation history**: Stores and retrieves Q&A history for each database
-- **Data insertion**: Direct insertion of telemetry data points
-- **Schema auto-migration**: Automatically creates tables using GORM migrations
+## Highlights
+
+- **Hands-free XBee link** – automatic detect/connect/reconnect cycle
+- **Mission lifecycle** – missions are started on demand and mapped to individual SQLite databases
+- **Real-time telemetry** – streaming via WebSocket plus REST fallbacks
+- **AI chat** – `/api/chat` and `/api/chat/ws` for low-latency responses and command detection
+- **Telemetry analytics** – packet rate, health, and summary statistics provided by dedicated endpoints
+- **Instruction profiles** – AI behaviour configured via `ai_instructions.toml`
 
 ## Prerequisites
 
 - Go 1.22+
-- Hugging Face API token with access to `meta-llama/Llama-3.1-8B-Instruct:fireworks-ai`
+- Ollama running locally with the configured model (default `gemma3:4b`)
+- XBee radio connected to the host machine
 
 ## Configuration
 
-Set the following environment variables before running the server:
+| Variable      | Description            | Default                  |
+| ------------- | ---------------------- | ------------------------ |
+| `PORT`        | HTTP port to listen on | `8000`                   |
+| `LLM_API_URL` | Ollama endpoint        | `http://localhost:11434` |
+| `LLM_MODEL`   | Ollama model name      | `gemma3:4b`              |
 
-| Variable             | Description                                 | Default      |
-| -------------------- | ------------------------------------------- | ------------ |
-| `HUGGING_FACE_TOKEN` | Bearer token for Hugging Face Inference API | **required** |
-| `PORT`               | HTTP port to listen on                      | `8000`       |
-
-## Running
+## Running Locally
 
 ```powershell
 cd mcp-server
-go mod tidy
+
 $env:CGO_ENABLED=0
 go run ./cmd
 ```
 
-The server listens on `http://localhost:8000` by default.
+The GUI assumes the backend is reachable at `http://localhost:8000` unless overridden in settings.
 
-## API Endpoints
+## Core Endpoints
 
-All endpoints expect JSON payloads and return JSON responses. Each request must include a `filename` parameter specifying the SQLite database file to operate on.
+### Mission & Telemetry Management
 
-### 1. Create Database
+| Endpoint                    | Method | Description                                                                          |
+| --------------------------- | ------ | ------------------------------------------------------------------------------------ |
+| `/api/xbee/mission/start`   | `POST` | Start a mission with a friendly name (returns mission metadata, including `dbPath`). |
+| `/api/xbee/mission`         | `GET`  | Retrieve the active mission (id, name, start time, db path).                         |
+| `/api/xbee/status`          | `GET`  | Connection snapshot with mission, stats, and radio configuration.                    |
+| `/api/xbee/telemetry`       | `GET`  | Paginated telemetry history (supports `start_time`, `end_time`, `limit`).            |
+| `/api/xbee/telemetry/stats` | `GET`  | Aggregate telemetry statistics (min/max/avg).                                        |
+| `/api/xbee/health`          | `GET`  | Link health diagnostic (uptime, last packet, packet counters).                       |
 
-**POST** `/create-db`
+> **Automatic ingestion** – telemetry frames received over XBee are persisted by the backend; the GUI no longer posts telemetry manually.
 
-Creates a new SQLite database file with the required tables.
+### Command & Activity
 
-**Request:**
+| Endpoint             | Method | Description                                                                |
+| -------------------- | ------ | -------------------------------------------------------------------------- |
+| `/api/xbee/command`  | `POST` | Send a command to the CanSat (body: `{ "command": "START", "data": "" }`). |
+| `/api/xbee/logs`     | `GET`  | Combined command/response history (latest 10,000 entries).                 |
+| `/api/xbee/activity` | `GET`  | Structured activity feed (frame processed, connection changes, errors).    |
 
-```json
-{
-  "filename": "mission1.db"
-}
-```
+### AI Assistance
 
-**Response:**
+| Endpoint           | Method | Description                                                                                                                               |
+| ------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `/api/chat`        | `POST` | Non-streaming chat (`{ "messages": [{ "role": "user", "content": "..." }], "stream": false }`). Returns `{ success, message, command? }`. |
+| `/api/chat/ws`     | `GET`  | WebSocket chat streaming (bidirectional); messages follow the same shape as `/api/chat`.                                                  |
+| `/api/chat/health` | `GET`  | Health probe for the AI service.                                                                                                          |
 
-```json
-{
-  "message": "Database created successfully"
-}
-```
+### WebSocket
 
-### 2. Ask Questions
+`ws://<host>/api/xbee/ws` streams real-time updates. Message `type` values:
 
-**POST** `/ask`
+- `telemetry` – latest telemetry payload
+- `stats` – updated packet/command counters
+- `mission` – mission metadata changes
+- `health` – connection health
+- `activity` – logging events
 
-Processes natural language questions about telemetry data, generates SQL queries, executes them, and provides AI-powered conversational responses. Supports GS command detection.
-
-If the specified database file doesn't exist, falls back to answering based on static context from a `.txt` file (e.g., `mission1.txt` for `mission1.db`, or `context.txt` as fallback).
-
-**Request:**
-
-```json
-{
-  "question": "What is the average altitude?",
-  "filename": "mission1.db"
-}
-```
-
-**Response:**
+## Mission Metadata Structure
 
 ```json
 {
-  "answer": {
-    "content": "The average altitude across all telemetry points is 1250.5 meters..."
-  },
-  "command": "ALT"
+  "id": "mission_1696752000",
+  "name": "Mission_2025-10-10_10-00-00",
+  "startTime": "2025-10-10T10:00:00Z",
+  "isActive": true,
+  "dbPath": "missions/mission_1696752000.db"
 }
 ```
 
-### 3. Get Telemetry Data
+The GUI stores the `dbPath` so it can route AI questions to the correct mission database when required.
 
-**POST** `/data`
+## Telemetry Shape
 
-Returns all telemetry data points from the specified database.
+Key fields returned by `/api/xbee/telemetry`:
 
-**Request:**
+| Field                                    | Description                          |
+| ---------------------------------------- | ------------------------------------ |
+| `TEAM_ID`                                | Team identifier (string)             |
+| `mission_time_s`                         | Mission clock in seconds             |
+| `packet_count`                           | Packet number (auto-increment)       |
+| `altitude`, `gps_altitude`               | Barometric & GNSS altitude (meters)  |
+| `pressure`, `temperature`, `voltage`     | Core environment & power metrics     |
+| `latitude`, `longitude`                  | GNSS coordinates                     |
+| `satellites`                             | GNSS satellite lock count            |
+| `accel_*`, `gyro_*`, `mag_*`             | IMU sensor axes                      |
+| `humidity`, `current`, `power`           | Additional environment/power signals |
+| `air_quality_raw`, `aq_ethanol_ppm`      | Air quality sensor data              |
+| `mcu_temp_c`, `rssi_dbm`, `health_flags` | Board telemetry                      |
+| `cmd_echo`                               | Latest command echo, if present      |
 
-```json
-{
-  "filename": "mission1.db"
-}
-```
+## GUI Integration Notes
 
-**Response:**
+- `MCPService.createDatabase` now proxies `/api/xbee/mission/start` and falls back to legacy `/create-db` only if the new endpoint is absent.
+- Telemetry auto-ingestion means the GUI no longer posts `/insert-data`; the integration hook simply listens for mission metadata updates.
+- `MCPService.askQuestion` calls `/api/chat` by default and gracefully falls back to legacy `/ask` for older deployments.
+- Configure the backend base URL in **Settings → Backend URL**; the AI port toggle is retained for backward compatibility but not required.
 
-```json
-[
-  {
-    "id": 1,
-    "TEAM_ID": "TEJAS",
-    "mission_time_s": 120.5,
-    "altitude": 1250.5,
-    "temperature": 25.3
-    // ... all telemetry fields
-  }
-]
-```
+## Troubleshooting
 
-### 4. Insert Telemetry Data
-
-**POST** `/insert-data`
-
-Inserts a new telemetry data point into the database.
-
-**Request:**
-
-```json
-{
-  "filename": "mission1.db",
-  "TEAM_ID": "TEJAS",
-  "mission_time_s": 120.5,
-  "packet_count": 45,
-  "altitude": 1250.5,
-  "pressure": 1013.25,
-  "temperature": 25.3,
-  "voltage": 3.7,
-  "latitude": 12.9716,
-  "longitude": 77.5946,
-  "satellites": 8,
-  "flight_state": 2
-  // ... other optional fields
-}
-```
-
-**Response:**
-
-```json
-{
-  "message": "Data inserted successfully",
-  "id": 123
-}
-```
-
-## Data Types
-
-### Telemetry Fields
-
-All telemetry fields are optional (nullable) in the database:
-
-| Field                           | Type    | Description                  |
-| ------------------------------- | ------- | ---------------------------- |
-| `TEAM_ID`                       | string  | Team identifier              |
-| `mission_time_s`                | float64 | Mission time in seconds      |
-| `packet_count`                  | int     | Packet sequence number       |
-| `altitude`                      | float64 | Altitude in meters           |
-| `pressure`                      | float64 | Atmospheric pressure         |
-| `temperature`                   | float64 | Temperature in Celsius       |
-| `voltage`                       | float64 | Battery voltage              |
-| `gnss_time`                     | string  | GNSS timestamp               |
-| `latitude`                      | float64 | GPS latitude                 |
-| `longitude`                     | float64 | GPS longitude                |
-| `gps_altitude`                  | float64 | GPS altitude                 |
-| `satellites`                    | int     | Number of GPS satellites     |
-| `accel_x`, `accel_y`, `accel_z` | float64 | Accelerometer readings       |
-| `gyro_spin_rate`                | float64 | Gyroscope spin rate          |
-| `flight_state`                  | int     | Flight state code            |
-| `gyro_x`, `gyro_y`, `gyro_z`    | float64 | Gyroscope readings           |
-| `roll`, `pitch`, `yaw`          | float64 | Orientation angles           |
-| `mag_x`, `mag_y`, `mag_z`       | float64 | Magnetometer readings        |
-| `humidity`                      | float64 | Humidity percentage          |
-| `current`                       | float64 | Current draw                 |
-| `power`                         | float64 | Power consumption            |
-| `baro_altitude`                 | float64 | Barometric altitude          |
-| `air_quality_raw`               | int     | Raw air quality sensor value |
-| `aq_ethanol_ppm`                | float64 | Ethanol concentration in ppm |
-| `mcu_temp_c`                    | float64 | MCU temperature              |
-| `rssi_dbm`                      | int     | Signal strength in dBm       |
-| `health_flags`                  | string  | Health status flags          |
-| `rtc_epoch`                     | int     | Real-time clock epoch        |
-| `cmd_echo`                      | string  | Command echo                 |
-
-### Conversation Fields
-
-| Field        | Type      | Description                              |
-| ------------ | --------- | ---------------------------------------- |
-| `id`         | uint      | Auto-generated primary key               |
-| `question`   | string    | User's question                          |
-| `answer`     | string    | AI-generated answer                      |
-| `commands`   | string    | Comma-separated command codes (optional) |
-| `created_at` | time.Time | Timestamp of conversation                |
-
-## Notes
-
-- Databases are created automatically when first accessed if they don't exist
-- All database operations are thread-safe with per-request connections
-- AI responses include data analysis and insights based on actual telemetry values
-- Command detection recognizes predefined GS commands and returns appropriate codes
-- SQL queries are generated automatically from natural language questions
-- Error responses follow standard HTTP status codes with descriptive messages
+- **No real-time data** – verify WebSocket connectivity (`/api/xbee/ws`) and check `/api/xbee/health` for downtime.
+- **Mission not starting** – confirm `/api/xbee/mission/start` returns `success: true` and that the `START` command was acknowledged (`commandEchoHistory`).
+- **AI errors** – check `/api/chat/health` and ensure Ollama is running with the configured model.
+- **Legacy endpoints** – if you are running an older backend build, the GUI automatically falls back to `/create-db` and `/ask` where needed.
+  **Request:**

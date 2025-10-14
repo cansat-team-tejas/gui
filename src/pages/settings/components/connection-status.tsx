@@ -2,50 +2,42 @@
  * Connection Status Component
  * Displays current connection status and selected port information
  */
-import React from "react";
 import LabelValue from "../../../components/label-value";
-import type { ConnectionStatus } from "../types";
+import Panel from "../../../components/panel";
+import { useIsConnected, useSelectedPort } from "../../../hooks/use-xbee-go";
 
-interface ConnectionStatusProps {
-  connectionStatus: ConnectionStatus;
-  statusMessage?: string;
-}
-
-const ConnectionStatusComponent: React.FC<ConnectionStatusProps> = ({
-  connectionStatus,
-  statusMessage,
-}) => {
-  const { isConnected, selectedPort } = connectionStatus;
+const ConnectionStatusComponent = () => {
+  const isConnected = useIsConnected();
+  const selectedPort = useSelectedPort();
 
   return (
-    <div className="border border-black bg-white p-2">
-      <div className="text-[10px] font-bold mb-2">CONNECTION STATUS</div>
-      <div className="grid grid-cols-2 gap-2">
-        <LabelValue
-          label="STATUS"
-          labelClassName="text-[10px] font-bold min-w-[140px] max-w-[140px]"
-        >
-          <div
-            className={`px-2 py-1 text-[10px] font-bold text-white ${
-              isConnected ? "bg-[#00AD57]" : "bg-red-500"
-            }`}
+    <Panel title="CONNECTION STATUS" variant="default">
+      <div className="border border-black bg-white p-2">
+        <div className="text-[10px] font-bold mb-2">CONNECTION STATUS</div>
+        <div className="grid grid-cols-2 gap-2">
+          <LabelValue
+            label="STATUS"
+            labelClassName="text-[10px] font-bold min-w-[140px] max-w-[140px]"
           >
-            {isConnected ? "CONNECTED" : "DISCONNECTED"}
-          </div>
-        </LabelValue>
-        <LabelValue
-          label="SELECTED PORT"
-          labelClassName="text-[10px] font-bold min-w-[140px] max-w-[140px]"
-        >
-          <div className="text-[10px] font-bold">{selectedPort || "NONE"}</div>
-        </LabelValue>
-      </div>
-      {statusMessage && (
-        <div className="mt-2 text-[10px] font-bold text-black">
-          {statusMessage}
+            <div
+              className={`px-2 py-1 text-[10px] font-bold text-white ${
+                isConnected ? "bg-[#00AD57]" : "bg-red-500"
+              }`}
+            >
+              {isConnected ? "CONNECTED" : "DISCONNECTED"}
+            </div>
+          </LabelValue>
+          <LabelValue
+            label="SELECTED PORT"
+            labelClassName="text-[10px] font-bold min-w-[140px] max-w-[140px]"
+          >
+            <div className="text-[10px] font-bold">
+              {selectedPort || "NONE"}
+            </div>
+          </LabelValue>
         </div>
-      )}
-    </div>
+      </div>
+    </Panel>
   );
 };
 

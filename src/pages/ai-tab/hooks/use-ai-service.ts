@@ -10,6 +10,8 @@ export interface AIResponse {
 
 export const useAIService = () => {
   const settingsState = useSettingsState();
+  const { xbeeBackendURL, currentDatabaseFilename, setConfirmationState } =
+    settingsState;
 
   const executeCommand = useCallback(
     async (command: string): Promise<string> => {
@@ -31,10 +33,9 @@ export const useAIService = () => {
     ): Promise<AIResponse> => {
       // Call remote MCP AI service (/ask) if available
       try {
-        const port = settingsState?.aiServicePort || 8000;
-        const filename = settingsState?.currentDatabaseFilename || "mission.db";
+        const filename = currentDatabaseFilename || undefined;
 
-        const mcpService = createMCPService(port);
+        const mcpService = createMCPService(xbeeBackendURL);
         const response = await mcpService.askQuestion(userMessage, filename);
 
         // The service returns { answer: { content }, command }
@@ -55,14 +56,14 @@ export const useAIService = () => {
           let timeLeft = 30;
           const updateTimer = () => {
             timeLeft -= 1;
-            settingsState.setConfirmationState((prev) => ({
+            setConfirmationState((prev) => ({
               ...prev,
               timeRemaining: timeLeft,
             }));
 
             if (timeLeft <= 0) {
               // Timeout expired
-              settingsState.setConfirmationState({
+              setConfirmationState({
                 isOpen: false,
                 command: null,
                 timeoutId: null,
@@ -74,7 +75,7 @@ export const useAIService = () => {
           const intervalId = setInterval(updateTimer, 1000);
 
           // Set initial confirmation state with timeout
-          settingsState.setConfirmationState({
+          setConfirmationState({
             isOpen: true,
             command,
             timeoutId: intervalId,
@@ -116,13 +117,13 @@ export const useAIService = () => {
           let timeLeft = 30;
           const updateTimer = () => {
             timeLeft -= 1;
-            settingsState.setConfirmationState((prev) => ({
+            setConfirmationState((prev) => ({
               ...prev,
               timeRemaining: timeLeft,
             }));
 
             if (timeLeft <= 0) {
-              settingsState.setConfirmationState({
+              setConfirmationState({
                 isOpen: false,
                 command: null,
                 timeoutId: null,
@@ -133,7 +134,7 @@ export const useAIService = () => {
 
           const intervalId = setInterval(updateTimer, 1000);
 
-          settingsState.setConfirmationState({
+          setConfirmationState({
             isOpen: true,
             command: testCommand,
             timeoutId: intervalId,
@@ -180,7 +181,12 @@ export const useAIService = () => {
         };
       }
     },
-    [executeCommand]
+    [
+      executeCommand,
+      currentDatabaseFilename,
+      xbeeBackendURL,
+      setConfirmationState,
+    ]
   );
 
   return { processAIResponse };

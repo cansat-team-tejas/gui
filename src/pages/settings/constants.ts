@@ -10,6 +10,7 @@ export const SYSTEM_CONTROL_COMMANDS: Command[] = [
   { label: "START", command: "START" },
   { label: "SHUTDOWN", command: "SHUTDOWN" },
   { label: "RESET", command: "RESET" },
+  { label: "CLEAR MISSION", command: "CLEAR_MISSION" },
 ];
 
 export const EMERGENCY_COMMANDS: Command[] = [
@@ -17,11 +18,13 @@ export const EMERGENCY_COMMANDS: Command[] = [
 ];
 
 export const CALIBRATION_COMMANDS: Command[] = [
-  { label: "CAL ALL", command: "CAL_SENSORS" },
+  { label: "CAL SENSORS", command: "CAL_SENSORS" },
 ];
 
 export const FLIGHT_CONTROL_COMMANDS: Command[] = [
-  { label: "PARACHUTE DEPLOY", command: "PARACHUTE_DEPLOY" },
+  { label: "SECONDARY DEPLOY", command: "SECONDARY_DEPLOY" },
+  { label: "LANDER STAGE1", command: "LANDER_STAGE1" },
+  { label: "LANDER STAGE2", command: "LANDER_STAGE2" },
 ];
 
 export const REACTION_WHEEL_COMMANDS: Command[] = [
@@ -60,7 +63,9 @@ export const TIMEOUTS = {
 export const CRITICAL_COMMANDS = [
   "EMERGENCY",
   "SHUTDOWN",
-  "PARACHUTE_DEPLOY",
+  "SECONDARY_DEPLOY",
+  "LANDER_STAGE1",
+  "LANDER_STAGE2",
   "START",
   "RESET",
 ] as const;

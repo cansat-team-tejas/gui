@@ -1,1 +1,1 @@
-export { VirtualCsvDataTable } from "./virtual-csv-data-table";
+// VirtualCsvDataTable export removed - file doesn't exist

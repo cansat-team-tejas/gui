@@ -23,8 +23,6 @@ export interface ConfirmationState {
 }
 
 export interface SettingsState {
-  isScanning: boolean;
-  isConnecting: boolean;
   connectionStatus: string;
   commandStatus: string;
   showResetConfirm: boolean;
@@ -33,6 +31,8 @@ export interface SettingsState {
   // AI service configuration
   aiServicePort: number;
   currentDatabaseFilename: string | null;
+  // Go backend configuration
+  xbeeBackendURL: string;
 }
 
 export type CriticalCommand =
@@ -41,9 +41,3 @@ export type CriticalCommand =
   | "PARACHUTE_DEPLOY"
   | "START"
   | "RESET";
-
-export interface ConnectionStatus {
-  isConnected: boolean;
-  selectedPort: string | null;
-  status: string;
-}

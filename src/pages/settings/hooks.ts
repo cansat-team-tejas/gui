@@ -2,28 +2,22 @@
  * Settings page hooks
  * Custom hooks for settings functionality using RHF and Zod
  */
-import { useState, useEffect } from "react";
+// import { useEffect } from "react"; // Temporarily disabled auto-scanning
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SettingsState, CriticalCommand, ConfirmationState } from "./types";
 import { CustomCommandFormData, customCommandSchema } from "./schemas";
 import { CRITICAL_COMMANDS } from "./constants";
-import {
-  useScanPorts,
-  useConnect,
-  useDisconnect,
-  useSetSelectedPort,
-  useTransmit,
-} from "../../hooks/use-xbee";
-import { useXBeeStore } from "../../store/xbee";
+import { useTransmit } from "../../hooks/use-xbee-go";
+import { useXBeeGoStore } from "../../store/xbee-go";
 import {
   createMCPService,
   generateMissionFilename,
 } from "../../utils/mcp-service";
+import { useSettingsStore } from "../../store/settings";
+import { useShallow } from "zustand/react/shallow";
 
 export const useSettingsState = (): SettingsState & {
-  setIsScanning: (scanning: boolean) => void;
-  setIsConnecting: (connecting: boolean) => void;
   setConnectionStatus: (status: string) => void;
   setCommandStatus: (status: string) => void;
   setShowResetConfirm: (show: boolean) => void;
@@ -31,71 +25,30 @@ export const useSettingsState = (): SettingsState & {
   setConfirmationState: (
     state: ConfirmationState | ((prev: ConfirmationState) => ConfirmationState)
   ) => void;
-  // AI service port
-  aiServicePort: number;
   setAiServicePort: (port: number) => void;
-  // Database filename
-  currentDatabaseFilename: string | null;
   setCurrentDatabaseFilename: (filename: string | null) => void;
-} => {
-  const [isScanning, setIsScanning] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState("");
-  const [commandStatus, setCommandStatus] = useState("");
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const [resetTimeout, setResetTimeout] = useState<NodeJS.Timeout | null>(null);
-  const [confirmationState, setConfirmationState] = useState<ConfirmationState>(
-    {
-      isOpen: false,
-      command: null,
-      timeoutId: null,
-      timeRemaining: 30,
-    }
+  setXbeeBackendURL: (url: string) => void;
+} =>
+  useSettingsStore(
+    useShallow((state) => ({
+      connectionStatus: state.connectionStatus,
+      commandStatus: state.commandStatus,
+      showResetConfirm: state.showResetConfirm,
+      resetTimeout: state.resetTimeout,
+      confirmationState: state.confirmationState,
+      aiServicePort: state.aiServicePort,
+      currentDatabaseFilename: state.currentDatabaseFilename,
+      xbeeBackendURL: state.xbeeBackendURL,
+      setConnectionStatus: state.setConnectionStatus,
+      setCommandStatus: state.setCommandStatus,
+      setShowResetConfirm: state.setShowResetConfirm,
+      setResetTimeout: state.setResetTimeout,
+      setConfirmationState: state.setConfirmationState,
+      setAiServicePort: state.setAiServicePort,
+      setCurrentDatabaseFilename: state.setCurrentDatabaseFilename,
+      setXbeeBackendURL: state.setXbeeBackendURL,
+    }))
   );
-  // AI service port (default 8000)
-  const [aiServicePort, setAiServicePort] = useState<number>(8000);
-  // Current database filename for MCP service
-  const [currentDatabaseFilename, setCurrentDatabaseFilename] = useState<
-    string | null
-  >(null);
-
-  return {
-    isScanning,
-    isConnecting,
-    connectionStatus,
-    commandStatus,
-    showResetConfirm,
-    resetTimeout,
-    confirmationState,
-    aiServicePort,
-    currentDatabaseFilename,
-    setIsScanning,
-    setIsConnecting,
-    setConnectionStatus,
-    setCommandStatus,
-    setShowResetConfirm,
-    setResetTimeout,
-    setConfirmationState,
-    setAiServicePort,
-    setCurrentDatabaseFilename,
-  };
-};
-
-export const useSettingsActions = () => {
-  const scanPorts = useScanPorts();
-  const connect = useConnect();
-  const disconnect = useDisconnect();
-  const setSelectedPort = useSetSelectedPort();
-  const transmit = useTransmit();
-
-  return {
-    scanPorts,
-    connect,
-    disconnect,
-    setSelectedPort,
-    transmit,
-  };
-};
 
 // RHF form hooks
 export const useCustomCommandForm = () => {
@@ -107,74 +60,14 @@ export const useCustomCommandForm = () => {
   });
 };
 
-export const usePortScanning = (
-  settingsState: ReturnType<typeof useSettingsState>
-) => {
-  const { scanPorts } = useSettingsActions();
-
-  const handleScanPorts = async () => {
-    settingsState.setIsScanning(true);
-    try {
-      await scanPorts();
-      settingsState.setConnectionStatus("Ports scanned successfully");
-    } catch (error) {
-      settingsState.setConnectionStatus("Failed to scan ports");
-    } finally {
-      settingsState.setIsScanning(false);
-    }
-  };
-
-  useEffect(() => {
-    handleScanPorts();
-  }, []);
-
-  return { handleScanPorts };
-};
-
-export const useConnectionManagement = (
-  settingsState: ReturnType<typeof useSettingsState>,
-  selectedPort: string | null
-) => {
-  const { connect, disconnect } = useSettingsActions();
-
-  const handleConnect = async () => {
-    if (!selectedPort) {
-      settingsState.setConnectionStatus("Please select a port first");
-      return;
-    }
-
-    settingsState.setIsConnecting(true);
-    try {
-      const success = await connect(selectedPort);
-      if (success) {
-        settingsState.setConnectionStatus("Connected successfully");
-      } else {
-        settingsState.setConnectionStatus("Failed to connect");
-      }
-    } catch (error) {
-      settingsState.setConnectionStatus("Connection error occurred");
-    } finally {
-      settingsState.setIsConnecting(false);
-    }
-  };
-
-  const handleDisconnect = async () => {
-    try {
-      await disconnect();
-      settingsState.setConnectionStatus("Disconnected");
-    } catch (error) {
-      settingsState.setConnectionStatus("Failed to disconnect");
-    }
-  };
-
-  return { handleConnect, handleDisconnect };
-};
-
 export const useCommandManagement = (
   settingsState: ReturnType<typeof useSettingsState>
 ) => {
-  const { transmit } = useSettingsActions();
-  const resetStore = useXBeeStore((state) => state.resetStore);
+  const transmit = useTransmit();
+  const resetStore = useXBeeGoStore((state) => state.resetStore);
+  const prepareForMissionStart = useXBeeGoStore(
+    (state) => state.prepareForMissionStart
+  );
 
   const RESET_TRIGGERING_COMMANDS = ["START", "RESET", "SHUTDOWN"];
 
@@ -246,20 +139,24 @@ export const useCommandManagement = (
 
   const executeCommand = async (command: string) => {
     try {
-      // Special handling for START command - reset GUI first and create new database
+      // Special handling for START command - reset GUI first and initialize mission
       if (command === "START") {
-        resetStore();
+        prepareForMissionStart();
         settingsState.setCommandStatus("GUI reset for new mission");
         await new Promise((resolve) => setTimeout(resolve, 200));
 
-        // Create new database file for this mission
+        // Request backend to start a new mission and capture database path
         try {
           const newFilename = generateMissionFilename("TEJAS");
-          const mcpService = createMCPService(settingsState.aiServicePort);
-          await mcpService.createDatabase(newFilename);
-          settingsState.setCurrentDatabaseFilename(newFilename);
+          const mcpService = createMCPService(settingsState.xbeeBackendURL);
+          const result = await mcpService.createDatabase(newFilename);
+          const missionPath = result.mission?.dbPath ?? newFilename;
+
+          settingsState.setCurrentDatabaseFilename(missionPath);
           settingsState.setCommandStatus(
-            `New mission database created: ${newFilename}`
+            result.mission
+              ? `Mission started: ${result.mission.name}`
+              : `Mission start requested: ${newFilename}`
           );
         } catch (error) {
           console.warn("Failed to create mission database:", error);

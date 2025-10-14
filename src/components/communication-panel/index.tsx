@@ -1,13 +1,13 @@
 import { useMemo } from "react";
 import LabelValue, { SmallFont } from "../label-value";
-import { useXBeeStore, xbeeSelectors } from "../../store/xbee";
 import {
   useTelemetryLatest,
   useTelemetryDataRate,
   useMissionPacketsReceived,
   useMissionPacketsSent,
   useLastCommandEcho,
-} from "../../hooks/use-xbee";
+  useTelemetryMissionDuration,
+} from "../../hooks/use-xbee-go";
 import {
   getSafeTelemetryData,
   getRSSIStatus,
@@ -20,9 +20,11 @@ const CommunicationPanel = () => {
   const packetsReceived = useMissionPacketsReceived();
   const packetsSent = useMissionPacketsSent();
   const lastCommandEcho = useLastCommandEcho();
-  const rssiUplink = useXBeeStore(xbeeSelectors.rssiUplink);
-  const rssiDownlink = useXBeeStore(xbeeSelectors.rssiDownlink);
-  const rssiLastUpdate = useXBeeStore(xbeeSelectors.rssiLastUpdate);
+  const missionDuration = useTelemetryMissionDuration();
+  // RSSI monitoring is handled by Go backend connection health
+  const rssiUplink = null;
+  const rssiDownlink = null;
+  const rssiLastUpdate = null;
 
   // Memoize expensive calculations
   const safeTelemetry = useMemo(
@@ -36,7 +38,8 @@ const CommunicationPanel = () => {
 
   const commStats = useMemo(
     () => ({
-      missionTime: safeTelemetry.MISSION_TIME_S,
+      missionTime:
+        missionDuration > 0 ? missionDuration : safeTelemetry.MISSION_TIME_S,
       packetsReceived,
       packetsSent,
       packetRate: dataRate,
@@ -44,6 +47,7 @@ const CommunicationPanel = () => {
       cmdEcho: lastCommandEcho?.COMMAND_ECHO || "NO_CMD",
     }),
     [
+      missionDuration,
       safeTelemetry.MISSION_TIME_S,
       safeTelemetry.RSSI_DBM,
       packetsReceived,

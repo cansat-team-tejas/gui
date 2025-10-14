@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { useXBeeStore, xbeeSelectors } from "../../store/xbee";
+import { useXBeeGoStore, xbeeGoSelectors } from "../../store/xbee-go";
 import type { ICommandType, ILogEntryType } from "../../types/telemetry";
 import {
   parseLogMessage,
@@ -19,8 +19,8 @@ const PacketStreamView: React.FC<PacketStreamViewProps> = ({
   showLogs = true,
   autoScroll = true,
 }) => {
-  const commandEchoHistory = useXBeeStore(xbeeSelectors.commandEchoHistory);
-  const logEntries = useXBeeStore(xbeeSelectors.logEntries);
+  const commandEchoHistory = useXBeeGoStore(xbeeGoSelectors.commandEchoHistory);
+  const logEntries = useXBeeGoStore(xbeeGoSelectors.logEntries);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Combine logs and commands into a single stream sorted by timestamp

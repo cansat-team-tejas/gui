@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Button from "../button";
 import ConfirmationDialog from "../confirmation-dialog";
-import { useXBeeStore } from "../../store/xbee";
+import { useXBeeGoStore } from "../../store/xbee-go";
 
 interface GuiResetButtonProps {
   className?: string;
@@ -12,7 +12,7 @@ export const GuiResetButton: React.FC<GuiResetButtonProps> = ({
 }) => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
-  const resetStore = useXBeeStore((state) => state.resetStore);
+  const resetStore = useXBeeGoStore((state) => state.resetStore);
 
   const handleReset = () => {
     setShowConfirm(true);

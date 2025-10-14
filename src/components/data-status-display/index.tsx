@@ -1,4 +1,4 @@
-import { useTelemetryHistory } from "../../hooks/use-xbee";
+import { useTelemetryHistory } from "../../hooks/use-xbee-go";
 
 const DataStatusDisplay = () => {
   const telemetryHistory = useTelemetryHistory();

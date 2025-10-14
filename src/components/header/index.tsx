@@ -1,6 +1,6 @@
 import FlagIcon from "../../assets/icons/flag-icon";
 import { FLIGHT_STATES } from "../../constants";
-import { useIsConnected, useTelemetryLatest } from "../../hooks/use-xbee";
+import { useIsConnected, useTelemetryLatest } from "../../hooks/use-xbee-go";
 import RouteTab from "../route-tab";
 import UTCTime from "./utc-time";
 

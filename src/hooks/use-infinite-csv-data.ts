@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useTelemetryHistory } from "./use-xbee";
+import { useTelemetryHistory } from "./use-xbee-go";
 import { transformTelemetryToCSV } from "../utils/telemetry-helpers";
 import { filterTelemetryData } from "../utils/data-processing";
 import { ICanSatTelemetryData } from "../data/csv-data";

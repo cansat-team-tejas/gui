@@ -9,7 +9,7 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L, { LatLngExpression } from "leaflet";
-import { useTelemetryHistory } from "../../../hooks/use-xbee";
+import { useTelemetryHistory } from "../../../hooks/use-xbee-go";
 
 // Fix default Leaflet icons
 import markerIcon from "leaflet/dist/images/marker-icon.png";

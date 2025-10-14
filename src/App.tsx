@@ -8,18 +8,20 @@ import PlotTab from "./pages/plot-tab";
 import CSVTab from "./pages/csv-tab";
 import LogTab from "./pages/log-tab";
 import SettingsPage from "./pages/settings";
-import { useXBeeStore } from "./store/xbee";
+import { useXBeeGoStore } from "./store/xbee-go";
 import AITab from "./pages/ai-tab";
 import { QueryProvider } from "./providers/query-provider";
-import { CLUSTER_IDS } from "./constants";
-import { getClusterName } from "./utils/cluster-helpers";
 import { useMCPIntegration } from "./hooks/use-mcp-integration";
 
 const App = () => {
-  const processFrame = useXBeeStore((state) => state.processFrame);
-  const processATResponse = useXBeeStore((state) => state.processATResponse);
+  const updateConnectionStatus = useXBeeGoStore(
+    (state) => state.updateConnectionStatus
+  );
+  const connectWebSocket = useXBeeGoStore((state) => state.connectWebSocket);
+  const disconnectWebSocket = useXBeeGoStore(
+    (state) => state.disconnectWebSocket
+  );
 
-  // Initialize MCP integration for automatic telemetry insertion
   useMCPIntegration();
 
   useEffect(() => {
@@ -32,57 +34,42 @@ const App = () => {
 
     window.addEventListener("keydown", handleKeyDown);
 
-    // Set up XBee frame listener for incoming data
-    let unsubscribeXBeeFrames: (() => void) | undefined;
+    // Add error handling to prevent crashes when backend is down
+    const safeUpdateConnectionStatus = async () => {
+      try {
+        await updateConnectionStatus();
+      } catch (error) {
+        console.warn("Backend connection unavailable:", error);
+      }
+    };
 
-    if (window.electronAPI?.xbee?.onFrameReceived) {
-      unsubscribeXBeeFrames = window.electronAPI.xbee.onFrameReceived(
-        (frame: any) => {
-          if (frame?.type === "AT_RESPONSE") {
-            // Handle AT response frames directly
-            processATResponse(frame);
-          } else if (frame?.data && typeof frame.data === "string") {
-            // Handle text-based frames with cluster ID filtering for explicit frames
-            // Cluster IDs (explicit frames only):
-            // 0x0001 = TELEMETRY
-            // 0x0002 = LOG
-            // 0x0003 = CMD_RESPONSE
+    safeUpdateConnectionStatus();
 
-            if (frame.explicitMetadata?.clusterId) {
-              const clusterId = frame.explicitMetadata.clusterId;
-              const clusterName = getClusterName(clusterId);
-
-              switch (clusterId) {
-                case CLUSTER_IDS.TELEMETRY: // 0x0001
-                  processFrame(frame.data);
-                  break;
-                case CLUSTER_IDS.LOG: // 0x0002
-                  processFrame(frame.data);
-                  break;
-                case CLUSTER_IDS.CMD_RESPONSE: // 0x0003
-                  processFrame(frame.data);
-                  break;
-                default:
-                  // Unknown cluster ID - log but still process
-                  console.warn(`Unknown cluster ID: ${clusterName}`);
-                  processFrame(frame.data);
-              }
-            } else {
-              // Standard frame (0x90) or explicit frame without cluster filtering
-              processFrame(frame.data);
-            }
-          }
-        }
-      );
-    }
+    const statusInterval = setInterval(() => {
+      safeUpdateConnectionStatus();
+    }, 30000);
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
-      if (unsubscribeXBeeFrames) {
-        unsubscribeXBeeFrames();
+      clearInterval(statusInterval);
+    };
+  }, [updateConnectionStatus]);
+
+  useEffect(() => {
+    try {
+      connectWebSocket();
+    } catch (error) {
+      console.warn("Failed to initialize telemetry stream:", error);
+    }
+
+    return () => {
+      try {
+        disconnectWebSocket();
+      } catch (error) {
+        console.warn("Failed to tear down telemetry stream:", error);
       }
     };
-  }, [processFrame, processATResponse]);
+  }, [connectWebSocket, disconnectWebSocket]);
 
   return (
     <QueryProvider>

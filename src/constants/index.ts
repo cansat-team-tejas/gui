@@ -2,15 +2,10 @@
  * Application-wide constants
  */
 
-// Frame types for telemetry processing
-export const FRAME_TYPES = {
-  TELEMETRY: "TELEMETRY",
-  COMMAND_ECHO: "COMMAND_ECHO",
-  LOG_ENTRY: "LOG_ENTRY",
-  UNKNOWN: "UNKNOWN",
+// Backend Configuration
+export const BACKEND_CONFIG = {
+  BACKEND_URL: import.meta.env.VITE_BACKEND_URL || "http://localhost:8000",
 } as const;
-
-export type FrameType = (typeof FRAME_TYPES)[keyof typeof FRAME_TYPES];
 
 export const TELEMETRY_CONSTANTS = {
   CSV_FIELD_COUNT: 41,
@@ -41,15 +36,6 @@ export const XBEE_CONSTANTS = {
   MAX_COMMAND_LENGTH: 50,
   RETRY_ATTEMPTS: 3,
 } as const;
-
-// XBee Explicit Frame Cluster IDs (matches firmware packet types)
-export const CLUSTER_IDS = {
-  TELEMETRY: 0x0001,
-  LOG: 0x0002,
-  CMD_RESPONSE: 0x0003,
-} as const;
-
-export type ClusterID = (typeof CLUSTER_IDS)[keyof typeof CLUSTER_IDS];
 
 // Ground Station Commands (matches firmware GS_COMMANDS)
 export const GS_COMMANDS = {

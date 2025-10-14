@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import LabelValue, { SmallFont } from "../label-value";
-import { useTelemetryLatest } from "../../hooks/use-xbee";
+import { useTelemetryLatest } from "../../hooks/use-xbee-go";
 import { getSafeTelemetryData } from "../../utils/telemetry-helpers";
 import { HEALTH_FLAGS } from "../../constants";
 
