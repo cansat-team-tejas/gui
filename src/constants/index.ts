@@ -13,7 +13,8 @@ export const FRAME_TYPES = {
 export type FrameType = (typeof FRAME_TYPES)[keyof typeof FRAME_TYPES];
 
 export const TELEMETRY_CONSTANTS = {
-  CSV_FIELD_COUNT: 41,
+  // Matches firmware sprintf format: 35 comma-separated fields
+  CSV_FIELD_COUNT: 35,
   MAX_HISTORY_SIZE: 1000,
   DATA_RATE_TARGET: 10, // Hz - matches firmware SENSOR_PROCESS_INTERVAL
   TELEMETRY_INTERVAL: 100, // ms - matches firmware TELEMETRY_DATA_INTERVAL
@@ -86,13 +87,13 @@ export const GS_COMMANDS = {
 } as const;
 
 // Sensor configurations (used for GCS-side calculations)
+// Minimal SENSOR_CONFIG retained for compatibility; not used by current CSV
 export const SENSOR_CONFIG = {
   TYPE: "MICS5524" as const,
   MICS5524: {
-    ADC_MAX: 4096, // Teensy 12-bit ADC
-    RL_OHMS: 10000, // Load resistor in ohms (adjust to your hardware)
-    R0_OHMS: 0, // Clean-air baseline resistance (to be calibrated per sensor)
-    // Per-gas curve coefficients: ppm = A * (Rs/R0)^B (set after calibration)
+    ADC_MAX: 4096,
+    RL_OHMS: 10000,
+    R0_OHMS: 0,
     COEFFS: {
       CO: { A: null as number | null, B: null as number | null },
       CH4: { A: null as number | null, B: null as number | null },

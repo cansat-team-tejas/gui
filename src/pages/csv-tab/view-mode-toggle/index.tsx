@@ -1,5 +1,9 @@
 import { Dispatch, SetStateAction } from "react";
-import { TOGGLE_MODE_TYPE } from "..";
+
+export enum TOGGLE_MODE_TYPE {
+  TABLE = "TABLE",
+  PACKETS = "PACKETS",
+}
 
 interface IViewModeToggleType {
   mode: "TABLE" | "PACKETS";

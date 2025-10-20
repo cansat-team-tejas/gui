@@ -59,6 +59,27 @@ export const useSettingsState = (): SettingsState & {
     string | null
   >(null);
 
+  // On mount, try to read active DB from backend and set it
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const mcp = createMCPService(aiServicePort);
+        const res = await mcp.getCurrentDatabase();
+        if (res?.current_db_path) {
+          // Store just the basename for display if path like databases/mission_*.db
+          const parts = res.current_db_path.split("/");
+          setCurrentDatabaseFilename(
+            parts[parts.length - 1] || res.current_db_path
+          );
+        }
+      } catch (e) {
+        // ignore silently on startup
+      }
+    };
+    init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return {
     isScanning,
     isConnecting,
@@ -256,7 +277,9 @@ export const useCommandManagement = (
         try {
           const newFilename = generateMissionFilename("TEJAS");
           const mcpService = createMCPService(settingsState.aiServicePort);
+          // Create DB under databases/ and set as active
           await mcpService.createDatabase(newFilename);
+          // Store just the filename label locally for UI reference
           settingsState.setCurrentDatabaseFilename(newFilename);
           settingsState.setCommandStatus(
             `New mission database created: ${newFilename}`
@@ -283,6 +306,26 @@ export const useCommandManagement = (
             settingsState.setCommandStatus(
               `GUI reset triggered by: ${command}`
             );
+
+            // After reset, also create a fresh mission database and set it active
+            (async () => {
+              try {
+                const newFilename = generateMissionFilename("TEJAS");
+                const mcpService = createMCPService(
+                  settingsState.aiServicePort
+                );
+                await mcpService.createDatabase(newFilename);
+                settingsState.setCurrentDatabaseFilename(newFilename);
+                settingsState.setCommandStatus(
+                  `New mission database created: ${newFilename}`
+                );
+              } catch (error) {
+                console.warn(
+                  "Failed to create mission database after reset command:",
+                  error
+                );
+              }
+            })();
           }, 500);
         }
       } else {

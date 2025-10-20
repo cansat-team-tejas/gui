@@ -43,10 +43,10 @@ export interface ITelemetryDataType {
   TEMPERATURE: number;
   VOLTAGE: number;
   GNSS_TIME: string;
-  GNSS_LATITUDE: number;
-  GNSS_LONGITUDE: number;
-  GNSS_ALTITUDE: number;
-  GNSS_SATS: number;
+  LATITUDE: number;
+  LONGITUDE: number;
+  GPS_ALTITUDE: number;
+  SATELLITES: number;
   ACCEL_X: number;
   ACCEL_Y: number;
   ACCEL_Z: number;
@@ -65,26 +65,11 @@ export interface ITelemetryDataType {
   CURRENT: number;
   POWER: number;
   BARO_ALTITUDE: number;
-  AIR_QUALITY_RAW: number;
-  AIR_QUALITY_ETHANOL_PPM: number;
   MCU_TEMP_C: number;
   RSSI_DBM: number;
-  HEALTH_FLAGS: number;
   RTC_EPOCH: number;
   CMD_ECHO: string;
-  // Optional derived fields (computed on GCS)
-  AIR_QUALITY_PPM?: number;
-  VOC_PPM?: number;
-  CO_PPM?: number;
-  CH4_PPM?: number;
-  NH3_PPM?: number;
-  H2_PPM?: number;
-  RAM_USAGE_PERCENT?: number;
-  SIGNAL_QUALITY_PERCENT?: number;
-  // Compatibility aliases for existing UI components
-  TEMP?: number;
-  FLIGHT_SOFTWARE_STATE?: number;
-  AQ_ETHANOL_PPM?: number;
+  LOG_DATA: string;
 }
 
 export type ICanSatTelemetryData = ITelemetryDataType;
@@ -112,7 +97,7 @@ export const FLIGHT_STATES = {
 export const getFlightStateName = (state: number): string =>
   FLIGHT_STATES[state as keyof typeof FLIGHT_STATES] || `UNKNOWN(${state})`;
 
-// Exact telemetry columns matching specification (indices 0-36)
+// Telemetry columns matching C++ specification (29 fields)
 export const columns: TableColumn[] = [
   { header: "TEAM_ID", accessor: "TEAM_ID" },
   { header: "MISSION_TIME_S", accessor: "MISSION_TIME_S" },
@@ -122,10 +107,10 @@ export const columns: TableColumn[] = [
   { header: "TEMPERATURE", accessor: "TEMPERATURE" },
   { header: "VOLTAGE", accessor: "VOLTAGE" },
   { header: "GNSS_TIME", accessor: "GNSS_TIME" },
-  { header: "GNSS_LATITUDE", accessor: "GNSS_LATITUDE" },
-  { header: "GNSS_LONGITUDE", accessor: "GNSS_LONGITUDE" },
-  { header: "GNSS_ALTITUDE", accessor: "GNSS_ALTITUDE" },
-  { header: "GNSS_SATS", accessor: "GNSS_SATS" },
+  { header: "LATITUDE", accessor: "LATITUDE" },
+  { header: "LONGITUDE", accessor: "LONGITUDE" },
+  { header: "GPS_ALTITUDE", accessor: "GPS_ALTITUDE" },
+  { header: "SATELLITES", accessor: "SATELLITES" },
   { header: "ACCEL_X", accessor: "ACCEL_X" },
   { header: "ACCEL_Y", accessor: "ACCEL_Y" },
   { header: "ACCEL_Z", accessor: "ACCEL_Z" },
@@ -144,11 +129,9 @@ export const columns: TableColumn[] = [
   { header: "CURRENT", accessor: "CURRENT" },
   { header: "POWER", accessor: "POWER" },
   { header: "BARO_ALTITUDE", accessor: "BARO_ALTITUDE" },
-  { header: "AIR_QUALITY_RAW", accessor: "AIR_QUALITY_RAW" },
-  { header: "AIR_QUALITY_ETHANOL_PPM", accessor: "AIR_QUALITY_ETHANOL_PPM" },
   { header: "MCU_TEMP_C", accessor: "MCU_TEMP_C" },
   { header: "RSSI_DBM", accessor: "RSSI_DBM" },
-  { header: "HEALTH_FLAGS", accessor: "HEALTH_FLAGS" },
   { header: "RTC_EPOCH", accessor: "RTC_EPOCH" },
   { header: "CMD_ECHO", accessor: "CMD_ECHO" },
+  { header: "LOG_DATA", accessor: "LOG_DATA" },
 ];

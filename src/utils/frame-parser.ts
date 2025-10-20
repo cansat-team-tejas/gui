@@ -5,11 +5,7 @@ import {
   LogEntry,
 } from "../types/telemetry";
 import { FRAME_TYPES, TELEMETRY_CONSTANTS } from "../constants";
-import {
-  computeVocPpm,
-  computeGasConcentrations,
-  computeMICS5524Gases,
-} from "./data-processing";
+// Note: Air quality/gas calculations removed to align with 35-field firmware CSV
 
 export class FrameParser {
   private static readonly CSV_FIELD_COUNT = TELEMETRY_CONSTANTS.CSV_FIELD_COUNT;
@@ -66,6 +62,7 @@ export class FrameParser {
 
   private static parseTelemetryData(csvData: string): TelemetryData | null {
     try {
+      // Remove any trailing array-like payloads (e.g., log events appended)
       const cleanCsv = csvData.split(",[")[0];
       const fields = cleanCsv.split(",");
 
@@ -84,127 +81,67 @@ export class FrameParser {
         return value ? value.trim() : fallback;
       };
 
-      const TELEMETRY_DATA: any = {
-        TEAM_ID: parseString(fields[0], "046"),
-        MISSION_TIME_S: parseFloat(fields[1]),
-        PACKET_COUNT: parseFloat(fields[2]),
+      // Map fields exactly to the 35-field firmware CSV format
+      const TELEMETRY_DATA: TelemetryData = {
+        // Header and counters
+        TEAM_ID: parseString(fields[0], "046"), // %s
+        MISSION_TIME_S: parseFloat(fields[1]), // %.1f
+        PACKET_COUNT: parseFloat(fields[2]), // %u
 
-        // Environmental sensors
-        ALTITUDE: parseFloat(fields[3]),
-        PRESSURE: parseFloat(fields[4]),
-        TEMPERATURE: parseFloat(fields[5]), // Corrected field name
-        VOLTAGE: parseFloat(fields[6]),
+        // Environmental
+        ALTITUDE: parseFloat(fields[3]), // %.1f
+        PRESSURE: parseFloat(fields[4]), // %.0f
+        TEMPERATURE: parseFloat(fields[5]), // %.1f
+        VOLTAGE: parseFloat(fields[6]), // %.2f
 
-        // GNSS data (new field structure)
-        GNSS_TIME: parseString(fields[7]),
-        GNSS_LATITUDE: parseFloat(fields[8]),
-        GNSS_LONGITUDE: parseFloat(fields[9]),
-        GNSS_ALTITUDE: parseFloat(fields[10]),
-        GNSS_SATS: parseFloat(fields[11]),
+        // GNSS
+        GNSS_TIME: parseString(fields[7]), // %s
+        LATITUDE: parseFloat(fields[8]), // %.6f
+        LONGITUDE: parseFloat(fields[9]), // %.6f
+        GPS_ALTITUDE: parseFloat(fields[10]), // %.1f
+        SATELLITES: parseFloat(fields[11]), // %d
 
-        // Accelerometer data
-        ACCEL_X: parseFloat(fields[12]),
-        ACCEL_Y: parseFloat(fields[13]),
-        ACCEL_Z: parseFloat(fields[14]),
+        // IMU: accel
+        ACCEL_X: parseFloat(fields[12]), // %.2f
+        ACCEL_Y: parseFloat(fields[13]), // %.2f
+        ACCEL_Z: parseFloat(fields[14]), // %.2f
 
-        // Flight dynamics
-        GYRO_SPIN_RATE: parseFloat(fields[15]),
-        FLIGHT_STATE: parseFloat(fields[16]), // Corrected field name
+        // Spin/flight
+        GYRO_SPIN_RATE: parseFloat(fields[15]), // %.2f
+        FLIGHT_STATE: parseFloat(fields[16]), // %d
 
-        // Power systems
-        CURRENT: parseFloat(fields[27]),
-        POWER: parseFloat(fields[28]),
+        // IMU: gyro
+        GYRO_X: parseFloat(fields[17]), // %.2f
+        GYRO_Y: parseFloat(fields[18]), // %.2f
+        GYRO_Z: parseFloat(fields[19]), // %.2f
 
-        // Gyroscope data
-        GYRO_X: parseFloat(fields[17]),
-        GYRO_Y: parseFloat(fields[18]),
-        GYRO_Z: parseFloat(fields[19]),
+        // Orientation
+        ROLL: parseFloat(fields[20]), // %.1f
+        PITCH: parseFloat(fields[21]), // %.1f
+        YAW: parseFloat(fields[22]), // %.1f
 
-        // Orientation data
-        ROLL: parseFloat(fields[20]),
-        PITCH: parseFloat(fields[21]),
-        YAW: parseFloat(fields[22]),
+        // Magnetometer
+        MAG_X: parseFloat(fields[23]), // %.1f
+        MAG_Y: parseFloat(fields[24]), // %.1f
+        MAG_Z: parseFloat(fields[25]), // %.1f
 
-        // Magnetometer data
-        MAG_X: parseFloat(fields[23]),
-        MAG_Y: parseFloat(fields[24]),
-        MAG_Z: parseFloat(fields[25]),
+        // Env/power
+        HUMIDITY: parseFloat(fields[26]), // %.2f
+        CURRENT: parseFloat(fields[27]), // %.2f
+        POWER: parseFloat(fields[28]), // %.1f
+        BARO_ALTITUDE: parseFloat(fields[29]), // %.1f
+        MCU_TEMP_C: parseFloat(fields[30]), // %.1f
 
-        // Environmental sensors (additional)
-        HUMIDITY: parseFloat(fields[26]),
-        BARO_ALTITUDE: parseFloat(fields[29]),
+        // Radio/time
+        RSSI_DBM: parseFloat(fields[31]), // %d
+        RTC_EPOCH: parseFloat(fields[32]), // %lu
 
-        // Air Quality Data (MICS-5524 Sensor)
-        // Field 30: Raw 12-bit ADC value (0-4095) from pin A6 - for diagnostics
-        // Field 31: Pre-calculated ethanol/VOC PPM (0-500 range) - base measurement
-        AIR_QUALITY_RAW: parseFloat(fields[30]),
-        AQ_ETHANOL_PPM: parseFloat(fields[31]),
+        // Strings
+        CMD_ECHO: parseString(fields[33] || ""), // %s
+        LOG_DATA: parseString(fields[34] || ""), // %s
+      } as TelemetryData;
 
-        MCU_TEMP_C: parseFloat(fields[32]),
-        RSSI_DBM: parseFloat(fields[33]),
-        HEALTH_FLAGS: (() => {
-          const raw = parseString(fields[34], "0");
-          return raw.startsWith("0x") ? parseInt(raw, 16) : Number(raw) || 0;
-        })(),
-        RTC_EPOCH: parseFloat(fields[35]),
-
-        // Reaction wheel control data (new fields)
-        RW_SPEED_PCT: parseFloat(fields[36]),
-        RW_SATURATED: parseFloat(fields[37]),
-        YAW_RATE_TARGET: parseFloat(fields[38]),
-        PID_OUTPUT: parseFloat(fields[39]),
-
-        // Communication data
-        CMD_ECHO: parseString(fields[40] || ""),
-        LOG_DATA: parseString(fields[41] || ""),
-      };
-
-      // ========== Air Quality Gas Calculations (MICS-5524) ==========
-      // The MICS-5524 is a single VOC sensor responding to multiple gases.
-      // Only 2 values are sent from CanSat:
-      //   1. AIR_QUALITY_RAW (Field 30): Raw ADC for diagnostics
-      //   2. AQ_ETHANOL_PPM (Field 31): Pre-calculated ethanol/VOC baseline
-      //
-      // GUI derives other gas concentrations using sensitivity ratios:
-      //   - Ethanol: Primary measurement (±10% accuracy)
-      //   - H2: 0.25x ethanol (±20% accuracy)
-      //   - CO: 0.15x ethanol (±30% accuracy)
-      //   - LPG: 0.12x ethanol (±30% accuracy)
-      //   - Propane: 0.10x ethanol (±30% accuracy)
-      //   - NH3: 0.08x ethanol (±30% accuracy)
-      //   - CH4: 0.05x ethanol (±40% accuracy)
-      //
-      // Note: These are approximate estimates due to cross-sensitivity.
-      // For absolute accuracy, calibration with known gas concentrations is required.
-
-      const voc = computeVocPpm(
-        TELEMETRY_DATA.AIR_QUALITY_RAW,
-        TELEMETRY_DATA.AQ_ETHANOL_PPM
-      );
-      TELEMETRY_DATA.VOC_PPM = voc;
-      if (
-        !TELEMETRY_DATA.AIR_QUALITY_PPM ||
-        TELEMETRY_DATA.AIR_QUALITY_PPM === 0
-      ) {
-        TELEMETRY_DATA.AIR_QUALITY_PPM = voc;
-      }
-
-      // Calculate derived gas concentrations from ethanol baseline
-      const gases =
-        computeMICS5524Gases(
-          TELEMETRY_DATA.AIR_QUALITY_RAW,
-          undefined,
-          TELEMETRY_DATA.AQ_ETHANOL_PPM
-        ) || computeGasConcentrations(TELEMETRY_DATA.AQ_ETHANOL_PPM);
-
-      TELEMETRY_DATA.AQ_CO_PPM = gases.AQ_CO_PPM;
-      TELEMETRY_DATA.AQ_CH4_PPM = gases.AQ_CH4_PPM;
-      TELEMETRY_DATA.AQ_NH3_PPM = gases.AQ_NH3_PPM;
-      TELEMETRY_DATA.AQ_H2_PPM = gases.AQ_H2_PPM;
-      TELEMETRY_DATA.AQ_LPG_PPM = gases.AQ_LPG_PPM;
-      TELEMETRY_DATA.AQ_PROPANE_PPM = gases.AQ_PROPANE_PPM;
-
-      return TELEMETRY_DATA as TelemetryData;
+      return TELEMETRY_DATA;
     } catch (error) {
       console.error("Failed to parse telemetry data:", error, csvData);
       return null;

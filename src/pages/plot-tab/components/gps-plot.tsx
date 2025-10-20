@@ -55,8 +55,8 @@ const GPSPlot = () => {
     const sorted = [...history].reverse();
     const gpsData = sorted
       .map((p) => {
-        const lat = p.GNSS_LATITUDE ?? p.LATITUDE;
-        const lng = p.GNSS_LONGITUDE ?? p.LONGITUDE;
+        const lat = p.LATITUDE;
+        const lng = p.LONGITUDE;
         return {
           pos: [lat, lng] as [number, number],
           data: p,
@@ -65,7 +65,7 @@ const GPSPlot = () => {
       .filter((p) => p.pos[0] && p.pos[1] && Math.abs(p.pos[0]) > 0.0001);
 
     const latest = gpsData[gpsData.length - 1];
-    const alt = latest?.data.GNSS_ALTITUDE ?? latest?.data.ALTITUDE ?? 0;
+    const alt = latest?.data.GPS_ALTITUDE ?? latest?.data.ALTITUDE ?? 0;
 
     return { gpsData, latest, stats: { count: gpsData.length, alt } };
   }, [history]);
@@ -81,23 +81,35 @@ const GPSPlot = () => {
     );
 
   return (
-    <div className="w-full h-full">
+    <div className="flex flex-col h-full border border-black bg-white">
       {/* Header */}
-      <div className="border-b border-black p-2 text-[10px] font-mono bg-white font-medium tracking-wide">
-        <span className="text-gray-600">LAT:</span>
-        <span className="ml-1 mr-3 font-bold">{center[0].toFixed(4)}</span>
-        <span className="text-gray-600">LON:</span>
-        <span className="ml-1 mr-3 font-bold">{center[1].toFixed(4)}</span>
-        <span className="text-gray-600">ALT:</span>
-        <span className="ml-1 mr-3 font-bold">{stats.alt}m</span>
-        <span className="text-gray-600">GPS:</span>
-        <span className="ml-1 font-bold">{stats.count}</span>
+      <div className="px-2 py-1 bg-[#D9D9D9] border-b border-black flex-shrink-0">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-black">
+              GPS TRACKER
+            </span>
+            <span className="text-[9px] text-gray-600">
+              {stats.count} points
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-[9px] font-semibold">
+            <span className="text-green-600">
+              {center[0].toFixed(4)}, {center[1].toFixed(4)}
+            </span>
+            <span className="text-blue-600">
+              {latest?.data.SATELLITES ?? 0} sats
+            </span>
+            <span className="text-orange-600">{stats.alt.toFixed(0)}m</span>
+          </div>
+        </div>
       </div>
 
+      {/* Map Container */}
       <MapContainer
         center={center}
         zoom={15}
-        style={{ height: "calc(100% - 40px)", width: "100%" }}
+        style={{ height: "100%", width: "100%" }}
         zoomControl={true}
         attributionControl={false}
       >

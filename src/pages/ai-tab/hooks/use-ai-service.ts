@@ -32,10 +32,8 @@ export const useAIService = () => {
       // Call remote MCP AI service (/ask) if available
       try {
         const port = settingsState?.aiServicePort || 8000;
-        const filename = settingsState?.currentDatabaseFilename || "mission.db";
-
         const mcpService = createMCPService(port);
-        const response = await mcpService.askQuestion(userMessage, filename);
+        const response = await mcpService.askQuestion(userMessage);
 
         // The service returns { answer: { content }, command }
         const answer =

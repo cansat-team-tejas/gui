@@ -14,4 +14,13 @@ export default defineConfig({
     port: 5178,
     strictPort: true,
   },
+  optimizeDeps: {
+    include: [
+      "react",
+      "react-dom",
+      "three",
+      "@react-three/fiber",
+      "@react-three/drei",
+    ],
+  },
 });

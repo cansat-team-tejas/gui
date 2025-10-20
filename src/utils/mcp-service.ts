@@ -4,15 +4,17 @@
  */
 
 export interface MCPCreateDatabaseRequest {
-  filename: string;
+  db_path: string; // e.g. "mission_001.db" (will be created under databases/)
 }
 
 export interface MCPCreateDatabaseResponse {
   message: string;
+  db_path: string;
+  full_path: string;
+  now_active: boolean;
 }
 
 export interface MCPInsertDataRequest {
-  filename: string;
   TEAM_ID?: string;
   mission_time_s?: number;
   packet_count?: number;
@@ -59,7 +61,6 @@ export interface MCPInsertDataResponse {
 
 export interface MCPAskRequest {
   question: string;
-  filename: string;
 }
 
 export interface MCPAskResponse {
@@ -76,13 +77,18 @@ export class MCPService {
     this.baseUrl = `http://localhost:${port}`;
   }
 
-  async createDatabase(filename: string): Promise<MCPCreateDatabaseResponse> {
-    const response = await fetch(`${this.baseUrl}/create-db`, {
+  /**
+   * Create a new SQLite database and set it as the active DB
+   */
+  async createDatabase(dbPath: string): Promise<MCPCreateDatabaseResponse> {
+    const response = await fetch(`${this.baseUrl}/database/create`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ filename }),
+      body: JSON.stringify({
+        db_path: dbPath,
+      } satisfies MCPCreateDatabaseRequest),
     });
 
     if (!response.ok) {
@@ -94,10 +100,13 @@ export class MCPService {
     return response.json();
   }
 
-  async insertTelemetryData(
+  /**
+   * Push telemetry data to the active database
+   */
+  async pushTelemetry(
     data: MCPInsertDataRequest
   ): Promise<MCPInsertDataResponse> {
-    const response = await fetch(`${this.baseUrl}/insert-data`, {
+    const response = await fetch(`${this.baseUrl}/telemetry/push`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -114,16 +123,16 @@ export class MCPService {
     return response.json();
   }
 
-  async askQuestion(
-    question: string,
-    filename: string
-  ): Promise<MCPAskResponse> {
+  /**
+   * Ask a natural language question against the active database
+   */
+  async askQuestion(question: string): Promise<MCPAskResponse> {
     const response = await fetch(`${this.baseUrl}/ask`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ question, filename }),
+      body: JSON.stringify({ question } satisfies MCPAskRequest),
     });
 
     if (!response.ok) {
@@ -132,6 +141,68 @@ export class MCPService {
       );
     }
 
+    return response.json();
+  }
+
+  /**
+   * Get the current active database path
+   */
+  async getCurrentDatabase(): Promise<{ current_db_path: string | null }> {
+    const response = await fetch(`${this.baseUrl}/database/current`, {
+      method: "GET",
+    });
+    if (!response.ok) {
+      throw new Error(
+        `Failed to get current database: ${response.status} ${response.statusText}`
+      );
+    }
+    return response.json();
+  }
+
+  /**
+   * Get all telemetry rows from the active database
+   */
+  async getTelemetry(): Promise<any[]> {
+    const response = await fetch(`${this.baseUrl}/telemetry`, {
+      method: "GET",
+    });
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch telemetry: ${response.status} ${response.statusText}`
+      );
+    }
+    return response.json();
+  }
+
+  /**
+   * Execute a read-only SQL query against the active database
+   */
+  async query(sql: string): Promise<{ result: any[] }> {
+    const response = await fetch(`${this.baseUrl}/query`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sql }),
+    });
+    if (!response.ok) {
+      throw new Error(
+        `Failed to execute query: ${response.status} ${response.statusText}`
+      );
+    }
+    return response.json();
+  }
+
+  /**
+   * Chat via GET query parameter (alternative to /ask)
+   */
+  async chat(prompt: string): Promise<MCPAskResponse> {
+    const url = new URL(`${this.baseUrl}/chat`);
+    url.searchParams.set("prompt", prompt);
+    const response = await fetch(url.toString(), { method: "GET" });
+    if (!response.ok) {
+      throw new Error(
+        `Failed to chat: ${response.status} ${response.statusText}`
+      );
+    }
     return response.json();
   }
 

@@ -28,14 +28,6 @@ export const useMCPIntegration = () => {
         if (telemetryId === lastTelemetryId.current) return;
         lastTelemetryId.current = telemetryId;
 
-        // Only insert if we have an active database filename
-        if (!settingsState.currentDatabaseFilename) {
-          console.log(
-            "No active database filename, skipping telemetry insertion"
-          );
-          return;
-        }
-
         insertTelemetryData(latestTelemetry);
       }
     );
@@ -45,13 +37,10 @@ export const useMCPIntegration = () => {
 
   const insertTelemetryData = async (telemetry: ITelemetryType) => {
     try {
-      if (!settingsState.currentDatabaseFilename) return;
-
       const mcpService = createMCPService(settingsState.aiServicePort);
 
       // Map telemetry data to MCP format
       const mcpData: MCPInsertDataRequest = {
-        filename: settingsState.currentDatabaseFilename,
         TEAM_ID: telemetry.TEAM_ID || "TEJAS",
         mission_time_s: telemetry.MISSION_TIME_S,
         packet_count: telemetry.PACKET_COUNT,
@@ -60,10 +49,10 @@ export const useMCPIntegration = () => {
         temperature: telemetry.TEMPERATURE,
         voltage: telemetry.VOLTAGE,
         gnss_time: telemetry.GNSS_TIME,
-        latitude: telemetry.GNSS_LATITUDE,
-        longitude: telemetry.GNSS_LONGITUDE,
-        gps_altitude: telemetry.GNSS_ALTITUDE,
-        satellites: telemetry.GNSS_SATS,
+        latitude: telemetry.LATITUDE,
+        longitude: telemetry.LONGITUDE,
+        gps_altitude: telemetry.GPS_ALTITUDE,
+        satellites: telemetry.SATELLITES,
         accel_x: telemetry.ACCEL_X,
         accel_y: telemetry.ACCEL_Y,
         accel_z: telemetry.ACCEL_Z,
@@ -82,11 +71,8 @@ export const useMCPIntegration = () => {
         current: telemetry.CURRENT,
         power: telemetry.POWER,
         baro_altitude: telemetry.BARO_ALTITUDE,
-        air_quality_raw: telemetry.AIR_QUALITY_RAW,
-        aq_ethanol_ppm: telemetry.AQ_ETHANOL_PPM,
         mcu_temp_c: telemetry.MCU_TEMP_C,
         rssi_dbm: telemetry.RSSI_DBM,
-        health_flags: telemetry.HEALTH_FLAGS?.toString(),
         rtc_epoch: telemetry.RTC_EPOCH,
         cmd_echo: telemetry.CMD_ECHO,
       };
@@ -94,7 +80,7 @@ export const useMCPIntegration = () => {
       const telemetryId = `${telemetry.MISSION_TIME_S || 0}_${
         telemetry.PACKET_COUNT || 0
       }`;
-      await mcpService.insertTelemetryData(mcpData);
+      await mcpService.pushTelemetry(mcpData);
       console.log("Telemetry data inserted successfully:", telemetryId);
     } catch (error) {
       console.warn("Failed to insert telemetry data:", error);

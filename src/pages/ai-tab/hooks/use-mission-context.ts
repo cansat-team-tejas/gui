@@ -52,23 +52,23 @@ export const useMissionContext = (): MissionContext => {
       isConnected,
       telemetry: {
         altitude: telemetryData.ALTITUDE,
-        gpsAltitude: telemetryData.GNSS_ALTITUDE || 0,
+        gpsAltitude: telemetryData.GPS_ALTITUDE || 0,
         temperature: telemetryData.TEMPERATURE || 0,
         pressure: telemetryData.PRESSURE,
         humidity: telemetryData.HUMIDITY,
         voltage: telemetryData.VOLTAGE,
         coordinates: {
-          lat: telemetryData.GNSS_LATITUDE,
-          lon: telemetryData.GNSS_LONGITUDE,
+          lat: telemetryData.LATITUDE,
+          lon: telemetryData.LONGITUDE,
         },
-        satellites: telemetryData.GNSS_SATS,
+        satellites: telemetryData.SATELLITES,
         missionTime: telemetryData.MISSION_TIME_S,
       },
       recentCommands: commandHistory,
       recentLogs: logEntries,
       systemStatus: {
         rssi: telemetryData.RSSI_DBM || 0,
-        airQuality: telemetryData.AIR_QUALITY_PPM || 0,
+        airQuality: 0,
       },
     }),
     [isConnected, telemetryData, commandHistory, logEntries]

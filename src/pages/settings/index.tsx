@@ -34,13 +34,10 @@ import {
 import {
   SYSTEM_CONTROL_COMMANDS,
   EMERGENCY_COMMANDS,
-  CALIBRATION_COMMANDS,
+  COMMUNICATION_COMMANDS,
   FLIGHT_CONTROL_COMMANDS,
-  REACTION_WHEEL_COMMANDS,
-  SD_CARD_COMMANDS,
   RTC_TIME_COMMANDS,
   MCU_MONITORING_COMMANDS,
-  HARDWARE_RESET_COMMANDS,
 } from "./constants";
 
 const SettingsPage: React.FC = () => {
@@ -172,9 +169,16 @@ const SettingsPage: React.FC = () => {
                   />
 
                   <CommandCategory
-                    title="CALIBRATION"
-                    commands={CALIBRATION_COMMANDS}
-                    type="calibration"
+                    title="COMMUNICATION"
+                    commands={COMMUNICATION_COMMANDS}
+                    type="system"
+                    onSendCommand={handleSendCommand}
+                  />
+
+                  <CommandCategory
+                    title="FLIGHT CONTROL"
+                    commands={FLIGHT_CONTROL_COMMANDS}
+                    type="flight"
                     onSendCommand={handleSendCommand}
                   />
 
@@ -191,35 +195,7 @@ const SettingsPage: React.FC = () => {
                     type="system"
                     onSendCommand={handleSendCommand}
                   />
-
-                  <CommandCategory
-                    title="HARDWARE RESET"
-                    commands={HARDWARE_RESET_COMMANDS}
-                    type="system"
-                    onSendCommand={handleSendCommand}
-                  />
-
-                  <CommandCategory
-                    title="FLIGHT CONTROL"
-                    commands={FLIGHT_CONTROL_COMMANDS}
-                    type="flight"
-                    onSendCommand={handleSendCommand}
-                  />
-
-                  <CommandCategory
-                    title="REACTION WHEEL"
-                    commands={REACTION_WHEEL_COMMANDS}
-                    type="system"
-                    onSendCommand={handleSendCommand}
-                  />
                 </div>
-
-                <CommandCategory
-                  title="SD CARD"
-                  commands={SD_CARD_COMMANDS}
-                  type="sdcard"
-                  onSendCommand={handleSendCommand}
-                />
               </div>
             </Panel>
           )}

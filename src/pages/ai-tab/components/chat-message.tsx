@@ -1,12 +1,5 @@
 import React, { memo } from "react";
-
-export interface ChatMessage {
-  id: string;
-  role: "user" | "ai";
-  content: string;
-  timestamp: Date;
-  commandExecuted?: string;
-}
+import type { ChatMessage } from "../types";
 
 interface ChatMessageProps {
   message: ChatMessage;

@@ -4,7 +4,7 @@
  */
 import { FrameParser } from "../../utils/frame-parser";
 import type { ICommandType, ILogEntryType } from "../../types/telemetry";
-import { FRAME_TYPES, CLUSTER_IDS } from "../../constants";
+import { FRAME_TYPES } from "../../constants";
 import type { XBeeStore, FrameProcessingActions } from "./types";
 
 export const createFrameProcessingActions = (

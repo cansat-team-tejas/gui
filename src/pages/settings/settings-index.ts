@@ -13,6 +13,12 @@ export * from "./components";
 export * from "./hooks";
 
 // Types and schemas
-export * from "./types";
+export type {
+  Command,
+  CommandCategory,
+  SettingsState,
+  ConfirmationState,
+  CriticalCommand,
+} from "./types";
 export * from "./schemas";
 export * from "./constants";

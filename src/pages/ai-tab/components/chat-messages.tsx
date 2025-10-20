@@ -1,5 +1,6 @@
 import React, { memo, useRef, useEffect } from "react";
-import ChatMessageComponent, { ChatMessage } from "./chat-message";
+import ChatMessageComponent from "./chat-message";
+import type { ChatMessage } from "../types";
 
 interface ChatMessagesProps {
   messages: ChatMessage[];

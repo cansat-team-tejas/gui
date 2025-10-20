@@ -38,7 +38,9 @@ export interface SettingsState {
 export type CriticalCommand =
   | "EMERGENCY"
   | "SHUTDOWN"
-  | "PARACHUTE_DEPLOY"
+  | "LANDER_STAGE1"
+  | "LANDER_STAGE2"
+  | "SECONDARY_DEPLOY"
   | "START"
   | "RESET";
 
