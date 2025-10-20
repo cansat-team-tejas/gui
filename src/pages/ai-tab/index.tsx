@@ -4,6 +4,8 @@ import ChatInput from "./components/chat-input";
 import { useMissionContext } from "./hooks/use-mission-context";
 import { useAIService } from "./hooks/use-ai-service";
 import { useChatMessages } from "./hooks/use-chat-messages";
+import Button from "../../components/button";
+import { useAIChatStore } from "../../store/aiChat";
 import ConfirmationDialog from "../../components/confirmation-dialog";
 import { useSettingsState, useCommandManagement } from "../settings/hooks";
 
@@ -22,6 +24,8 @@ const AITab: React.FC = () => {
     addAIMessage,
     addErrorMessage,
   } = useChatMessages();
+  // Access clear method from store for reset
+  const clearChat = useAIChatStore((s) => s.clear);
 
   const handleSendMessage = useCallback(
     async (message: string) => {
@@ -62,8 +66,17 @@ const AITab: React.FC = () => {
   return (
     <section about="AI Mission Assistant">
       <div className="h-full flex flex-col bg-white">
+        <div className="flex items-center justify-end px-4 pt-2 pb-1 w-full">
+          <Button
+            variant="warning"
+            className="text-[10px] px-2 py-1 h-[24px]"
+            onClick={clearChat}
+            title="Clear conversation"
+          >
+            Reset
+          </Button>
+        </div>
         <ChatMessages messages={messages} isProcessing={isProcessing} />
-
         <ChatInput
           onSendMessage={handleSendMessage}
           isProcessing={isProcessing}
