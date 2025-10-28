@@ -1,8 +1,7 @@
-import { useTelemetryHistory } from "../../../hooks/use-xbee";
+import { useTelemetryLatest } from "../../../hooks/use-xbee";
 
 const MotionPanel = () => {
-  const history = useTelemetryHistory();
-  const latest = history?.[history.length - 1];
+  const latest = useTelemetryLatest();
 
   // IMU Data
   const accelX = latest?.ACCEL_X ?? 0;

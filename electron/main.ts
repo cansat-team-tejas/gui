@@ -16,8 +16,18 @@ const xbeeApiOptions = {
   module: "ZigBee",
 };
 
-// -- Electron Window Setup (unchanged) --
+function resolveIconPath(): string {
+  // Prefer packaged asset under dist/images; during dev use public/images
+  if (isDev) {
+    return path.join(process.cwd(), "public", "images", "logo-1.svg");
+  }
+  // When packaged, __dirname is dist-electron; dist assets are in ../dist
+  return path.join(__dirname, "..", "dist", "images", "logo-1.svg");
+}
+
+// -- Electron Window Setup --
 function createWindow(): void {
+  const iconPath = resolveIconPath();
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -33,6 +43,7 @@ function createWindow(): void {
     show: false,
     autoHideMenuBar: true,
     frame: true,
+    icon: iconPath,
   });
 
   if (isDev) {
@@ -56,6 +67,8 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  // Ensure correct taskbar grouping on Windows; should match build.appId
+  app.setAppUserModelId("com.cansat.gui");
   createWindow();
   const menu = Menu.buildFromTemplate([
     {

@@ -1,20 +1,19 @@
-import { useTelemetryHistory } from "../../../hooks/use-xbee";
+import { useTelemetryLatest } from "../../../hooks/use-xbee";
 import { FLIGHT_STATES } from "../../../constants";
 
 const EnvironmentalPanel = () => {
-  const history = useTelemetryHistory();
-  const latest = history?.[history.length - 1];
+  const latest = useTelemetryLatest();
 
   // Environmental Data
   const temperature = latest?.TEMPERATURE ?? 0;
   const pressure = latest?.PRESSURE ?? 0;
   const humidity = latest?.HUMIDITY ?? 0;
   const mcuTemp = latest?.MCU_TEMP_C ?? 0;
-  // Battery percentage calculation (assuming 3.0V = 0%, 4.2V = 100%)
+  // Battery percentage calculation for 3S LiPo (9.0V = 0%, 12.6V = 100%)
   const voltage = latest?.VOLTAGE ?? 0;
   const batteryPercent = Math.max(
     0,
-    Math.min(100, ((voltage - 3.0) / (4.2 - 3.0)) * 100)
+    Math.min(100, ((voltage - 9.0) / (12.6 - 9.0)) * 100)
   );
 
   // Helper function to get temperature color
@@ -23,7 +22,7 @@ const EnvironmentalPanel = () => {
     if (temp > 25) return "#f97316"; // Warm - orange
     if (temp > 15) return "#22c55e"; // Normal - green
     if (temp > 5) return "#3b82f6"; // Cool - blue
-    return "#6366f1"; // Cold - indigo
+    return "#6366f1";
   };
 
   return (
