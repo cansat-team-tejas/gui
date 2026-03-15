@@ -1,14 +1,6 @@
 import { useXBeeStore, xbeeSelectors } from "../store/xbee";
 
-/**
- * Specialized XBee hooks using the modular store architecture
- * These hooks provide optimized access to specific parts of the XBee store
- * Use these instead of a monolithic useXBee hook for better performance
- */
-
-/**
- * Hook for specific telemetry data with optimized selectors
- */
+// Telemetry
 export const useTelemetry = () => {
   const latest = useXBeeStore(xbeeSelectors.latestTelemetry);
   const history = useXBeeStore(xbeeSelectors.telemetryHistory);
@@ -23,9 +15,7 @@ export const useTelemetry = () => {
   };
 };
 
-/**
- * Individual telemetry selectors to prevent object recreation
- */
+// Individual telemetry selectors
 export const useTelemetryLatest = () =>
   useXBeeStore(xbeeSelectors.latestTelemetry);
 export const useTelemetryHistory = () =>
@@ -34,9 +24,7 @@ export const useTelemetryDataRate = () => useXBeeStore(xbeeSelectors.dataRate);
 export const useTelemetryMissionDuration = () =>
   useXBeeStore(xbeeSelectors.missionDuration);
 
-/**
- * Hook for connection state with optimized selectors
- */
+// Connection
 export const useConnection = () => {
   const isConnected = useXBeeStore(xbeeSelectors.isConnected);
   const availablePorts = useXBeeStore(xbeeSelectors.availablePorts);
@@ -51,9 +39,7 @@ export const useConnection = () => {
   };
 };
 
-/**
- * Individual connection selectors to prevent object recreation
- */
+// Individual connection selectors
 export const useIsConnected = () => useXBeeStore(xbeeSelectors.isConnected);
 export const useAvailablePorts = () =>
   useXBeeStore(xbeeSelectors.availablePorts);
@@ -61,9 +47,7 @@ export const useSelectedPort = () => useXBeeStore(xbeeSelectors.selectedPort);
 export const useConnectionStats = () =>
   useXBeeStore(xbeeSelectors.connectionStats);
 
-/**
- * Hook for getting telemetry data with time range filtering
- */
+// Time-range filtered telemetry
 export const useTelemetryByTimeRange = (startTime?: Date, endTime?: Date) => {
   return useXBeeStore((state) => {
     if (!startTime || !endTime) {
@@ -73,16 +57,12 @@ export const useTelemetryByTimeRange = (startTime?: Date, endTime?: Date) => {
   });
 };
 
-/**
- * Hook for getting recent telemetry (for performance in components)
- */
+// Recent telemetry (limited slice for perf)
 export const useRecentTelemetry = (count: number = 100) => {
   return useXBeeStore((state) => state.telemetry.history.slice(0, count));
 };
 
-/**
- * Utility hook for mission statistics
- */
+// Mission statistics
 export const useMissionStats = () => {
   const duration = useXBeeStore((state) => state.telemetry.totalMissionTime);
   const packetsReceived = useXBeeStore(
@@ -105,9 +85,7 @@ export const useMissionStats = () => {
   };
 };
 
-/**
- * Individual mission stat selectors to prevent object recreation
- */
+// Individual mission stat selectors
 export const useMissionDuration = () =>
   useXBeeStore((state) => state.telemetry.totalMissionTime);
 export const useMissionPacketsReceived = () =>
@@ -121,9 +99,7 @@ export const useMissionStartTime = () =>
 export const useTotalDataPoints = () =>
   useXBeeStore((state) => state.telemetry.history.length);
 
-/**
- * Hook for command echo data with optimized selectors
- */
+// Command echoes
 export const useCommandEcho = () => {
   const lastCommandEcho = useXBeeStore(xbeeSelectors.lastCommandEcho);
   const commandHistory = useXBeeStore(xbeeSelectors.commandEchoHistory);
@@ -134,17 +110,13 @@ export const useCommandEcho = () => {
   };
 };
 
-/**
- * Individual command echo selectors to prevent object recreation
- */
+// Individual command echo selectors
 export const useLastCommandEcho = () =>
   useXBeeStore(xbeeSelectors.lastCommandEcho);
 export const useCommandHistory = () =>
   useXBeeStore(xbeeSelectors.commandEchoHistory);
 
-/**
- * Hook for log entries with optimized selectors
- */
+// Log entries
 export const useLogEntries = () => {
   const logEntries = useXBeeStore(xbeeSelectors.logEntries);
   const recentLogs = useXBeeStore(xbeeSelectors.recentLogs);
@@ -155,15 +127,11 @@ export const useLogEntries = () => {
   };
 };
 
-/**
- * Individual log selectors to prevent object recreation
- */
+// Individual log selectors
 export const useLogEntriesData = () => useXBeeStore(xbeeSelectors.logEntries);
 export const useRecentLogs = () => useXBeeStore(xbeeSelectors.recentLogs);
 
-/**
- * Hook for frame processing statistics
- */
+// Frame processing stats
 export const useFrameProcessing = () => {
   const processingStats = useXBeeStore(xbeeSelectors.processingStats);
   const frameStats = useXBeeStore(xbeeSelectors.frameStats);
@@ -175,9 +143,7 @@ export const useFrameProcessing = () => {
   };
 };
 
-/**
- * Hook for activity log data
- */
+// Activity log
 export const useActivityLog = () => {
   const activityLog = useXBeeStore(xbeeSelectors.activityLog);
 
@@ -188,9 +154,7 @@ export const useActivityLog = () => {
   };
 };
 
-/**
- * Individual activity log selectors to prevent object recreation
- */
+// Individual activity log selectors
 export const useActivityLogData = () => useXBeeStore(xbeeSelectors.activityLog);
 export const useRecentActivity = () => {
   const activityLog = useXBeeStore(xbeeSelectors.activityLog);
@@ -199,9 +163,7 @@ export const useRecentActivity = () => {
 export const useClearActivityLog = () =>
   useXBeeStore((state) => state.clearActivityLog);
 
-/**
- * Hook for connection actions (for settings and control)
- */
+// Connection actions (for settings/control)
 export const useConnectionActions = () => {
   const scanPorts = useXBeeStore((state) => state.scanPorts);
   const connect = useXBeeStore((state) => state.connect);
@@ -218,9 +180,7 @@ export const useConnectionActions = () => {
   };
 };
 
-/**
- * Individual action selectors to prevent object recreation
- */
+// Individual action selectors
 export const useScanPorts = () => useXBeeStore((state) => state.scanPorts);
 export const useConnect = () => useXBeeStore((state) => state.connect);
 export const useDisconnect = () => useXBeeStore((state) => state.disconnect);

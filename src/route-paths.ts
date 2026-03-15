@@ -5,7 +5,6 @@ const ROUTE_PATHS = {
   AI_TAB: "/ai-tab",
   INFO: "/info",
   SETTINGS: "/settings",
-  LOGOUT: "/logout",
-};
+} as const;
 
 export default ROUTE_PATHS;

@@ -3,10 +3,13 @@ import { FLIGHT_STATES } from "../../constants";
 import { useIsConnected, useTelemetryLatest } from "../../hooks/use-xbee";
 import RouteTab from "../route-tab";
 import UTCTime from "./utc-time";
+import { useSimulationStore } from "../../store/simulation";
 
 const Header = () => {
   const isConnected = useIsConnected();
   const latestTelemetry = useTelemetryLatest();
+  const simMode = useSimulationStore((s) => s.mode);
+  const simRunning = useSimulationStore((s) => s.isRunning);
 
   return (
     <header className="bg-[#D9D9D9] h-[45px] w-screen border-black border-b px-2 py-1 flex justify-between">
@@ -33,6 +36,15 @@ const Header = () => {
           >
             {isConnected ? "CONNECTED" : "DISCONNECTED"}
           </div>
+          {simMode === "gui" && (
+            <div
+              className={`flex items-center border border-black text-[12px] font-bold px-6 h-full ${
+                simRunning ? "bg-[#00AD57] text-white" : "bg-[#D9D9D9] text-black"
+              }`}
+            >
+              SIM {simRunning ? "ON" : "OFF"}
+            </div>
+          )}
         </div>
 
         <UTCTime />

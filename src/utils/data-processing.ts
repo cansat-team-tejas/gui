@@ -1,15 +1,7 @@
-/**
- * Data Processing Pipeline
- * Centralized data filtering and processing utilities
- */
-
 import type { ITelemetryType } from "../types/telemetry";
 import type { ICanSatTelemetryData } from "../data/csv-data";
 import { SENSOR_CONFIG } from "../constants";
 
-/**
- * Filter telemetry data based on search criteria
- */
 export const filterTelemetryData = (
   data: ICanSatTelemetryData[],
   searchTerm: string,
@@ -26,9 +18,6 @@ export const filterTelemetryData = (
   });
 };
 
-/**
- * Sort telemetry data by specified column
- */
 export const sortTelemetryData = (
   data: ICanSatTelemetryData[],
   column: keyof ICanSatTelemetryData,
@@ -53,9 +42,6 @@ export const sortTelemetryData = (
   });
 };
 
-/**
- * Get latest N telemetry entries
- */
 export const getLatestTelemetryEntries = (
   data: ITelemetryType[],
   count: number = 100
@@ -63,9 +49,6 @@ export const getLatestTelemetryEntries = (
   return data.slice(0, Math.min(count, data.length));
 };
 
-/**
- * Calculate telemetry statistics
- */
 export const calculateTelemetryStats = (data: ITelemetryType[]) => {
   if (data.length === 0) {
     return {
@@ -106,19 +89,8 @@ export const calculateTelemetryStats = (data: ITelemetryType[]) => {
   };
 };
 
-/**
- * Compute VOC PPM from available air quality data.
- *
- * CanSat Telemetry Air Quality Fields:
- * - Field 30 (AIR_QUALITY_RAW): Raw 12-bit ADC value (0-4095) from MICS-5524 on pin A6
- * - Field 31 (AQ_ETHANOL_PPM): Pre-calculated ethanol/VOC concentration (0-500 PPM range)
- *
- * Priority:
- * 1) Use AQ_ETHANOL_PPM from firmware (pre-calculated and smoothed on CanSat)
- * 2) Fallback: Map AIR_QUALITY_RAW to 0-100 ppm as simple heuristic
- *
- * Note: Ethanol PPM is the primary measurement used as baseline for all other gas calculations.
- */
+// Compute VOC PPM using firmware's pre-calculated ethanol value,
+// falling back to a raw ADC heuristic.
 export const computeVocPpm = (
   airQualityRaw?: number,
   ethanolPpm?: number
@@ -134,26 +106,8 @@ export const computeVocPpm = (
   return 0;
 };
 
-/**
- * Compute individual gas concentrations from ethanol baseline (MICS-5524 sensor).
- *
- * MICS-5524 Sensor Characteristics:
- * - Single VOC/gas sensor responding to multiple gases
- * - Ethanol is the primary measurement (most sensitive, ±10% accuracy)
- * - Other gases are derived estimates using sensitivity ratios from datasheet
- * - Cross-sensitivity: sensor responds to multiple gases simultaneously
- *
- * Calibration Factors (from MICS-5524 datasheet):
- * - CO (Carbon Monoxide): 0.15 (±30% accuracy, lower sensitivity)
- * - CH4 (Methane): 0.05 (±40% accuracy, lowest sensitivity)
- * - NH3 (Ammonia): 0.08 (±30% accuracy, lower sensitivity)
- * - H2 (Hydrogen): 0.25 (±20% accuracy, moderate sensitivity)
- * - LPG: 0.12 (±30% accuracy, approximate)
- * - Propane: 0.10 (±30% accuracy, approximate)
- *
- * Note: These are approximate estimates. For absolute accuracy,
- * calibrate with known gas concentrations.
- */
+// Derive individual gas estimates from ethanol baseline using MICS-5524
+// sensitivity ratios (approximate, from datasheet).
 export const computeGasConcentrations = (ethanolPpm: number | undefined) => {
   const e =
     typeof ethanolPpm === "number" && !isNaN(ethanolPpm)
@@ -169,10 +123,7 @@ export const computeGasConcentrations = (ethanolPpm: number | undefined) => {
   } as const;
 };
 
-/**
- * Compute RAM usage percentage
- * Per specification: (1048576 - MCU_FREE_RAM) / 1048576 * 100
- */
+// RAM usage: (1MB - free) / 1MB * 100
 export const computeRAMUsagePercent = (freeRamBytes?: number): number => {
   if (freeRamBytes === undefined || freeRamBytes < 0) return 0;
   const totalRAM = 1048576; // 1MB in bytes
@@ -180,11 +131,7 @@ export const computeRAMUsagePercent = (freeRamBytes?: number): number => {
   return Math.min(100, Math.max(0, (usedRAM / totalRAM) * 100));
 };
 
-/**
- * Convert RSSI dBm to signal quality percentage
- * Per specification: Convert RSSI_DBM to percentage scale
- * Typical range: -120 dBm (0%) to -30 dBm (100%)
- */
+// Convert RSSI dBm to signal quality percentage (-120 dBm = 0%, -30 dBm = 100%)
 export const computeSignalQuality = (rssiDbm: number): number => {
   if (rssiDbm > 1000000000) return 0; // Invalid RSSI indicator
   if (rssiDbm >= -30) return 100;
@@ -192,10 +139,6 @@ export const computeSignalQuality = (rssiDbm: number): number => {
   return Math.round(((rssiDbm + 120) / 90) * 100);
 };
 
-/**
- * Format mission time as MM:SS
- * Per specification: Format MISSION_TIME_S as MM:SS
- */
 export const formatMissionTime = (seconds: number): string => {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = Math.floor(seconds % 60);
@@ -204,11 +147,8 @@ export const formatMissionTime = (seconds: number): string => {
     .padStart(2, "0")}`;
 };
 
-/**
- * Convert MiCS-5524 sensor readings to ppm, given ADC reading and calibration.
- * Typical approach uses Rs/R0 and log-log curves per gas. If calibration
- * coefficients are not set, falls back to ethanol-derived mix.
- */
+// Convert MICS-5524 ADC readings to gas PPM via Rs/R0 curves.
+// Falls back to ethanol-derived multipliers when calibration is unavailable.
 export const computeMICS5524Gases = (
   adcRaw: number | undefined,
   vref: number | undefined,
@@ -271,9 +211,6 @@ export const computeMICS5524Gases = (
   } as const;
 };
 
-/**
- * Validate telemetry data integrity
- */
 export const validateTelemetryData = (
   data: ITelemetryType
 ): {

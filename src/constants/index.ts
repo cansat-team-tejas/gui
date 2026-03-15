@@ -1,8 +1,3 @@
-/**
- * Application-wide constants
- */
-
-// Frame types for telemetry processing
 export const FRAME_TYPES = {
   TELEMETRY: "TELEMETRY",
   COMMAND_ECHO: "COMMAND_ECHO",
@@ -33,6 +28,9 @@ export const FLIGHT_STATES = {
   7: "FINAL_DESCENT",
   8: "IMPACT",
 } as const;
+
+export const getFlightStateName = (state: number): string =>
+  FLIGHT_STATES[state as keyof typeof FLIGHT_STATES] || `UNKNOWN(${state})`;
 
 // XBee communication constants
 export const XBEE_CONSTANTS = {

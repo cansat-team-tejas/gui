@@ -5,7 +5,6 @@ import {
   LogEntry,
 } from "../types/telemetry";
 import { FRAME_TYPES, TELEMETRY_CONSTANTS } from "../constants";
-// Note: Air quality/gas calculations removed to align with 35-field firmware CSV
 
 export class FrameParser {
   private static readonly CSV_FIELD_COUNT = TELEMETRY_CONSTANTS.CSV_FIELD_COUNT;

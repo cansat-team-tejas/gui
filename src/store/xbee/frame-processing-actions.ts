@@ -1,7 +1,3 @@
-/**
- * XBee Store - Frame Processing Actions
- * Handles processing of incoming XBee frames including cluster-based filtering
- */
 import { FrameParser } from "../../utils/frame-parser";
 import type { ICommandType, ILogEntryType } from "../../types/telemetry";
 import { FRAME_TYPES } from "../../constants";

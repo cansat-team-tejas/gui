@@ -1,25 +1,18 @@
-/**
- * XBee Store Selectors
- * Centralized selectors for optimized subscriptions
- */
 import type { XBeeStore } from "./types";
 
 export const xbeeSelectors = {
-  // === TELEMETRY SELECTORS ===
   latestTelemetry: (s: XBeeStore) => s.telemetry.history[0] ?? null,
   telemetryHistory: (s: XBeeStore) => s.telemetry.history,
   dataRate: (s: XBeeStore) => s.telemetry.dataRate,
   missionDuration: (s: XBeeStore) => s.telemetry.totalMissionTime,
   missionStartTime: (s: XBeeStore) => s.telemetry.missionStartTime,
 
-  // === CONNECTION SELECTORS ===
   isConnected: (s: XBeeStore) => s.connection.isConnected,
   availablePorts: (s: XBeeStore) => s.connection.availablePorts,
   selectedPort: (s: XBeeStore) => s.connection.selectedPort,
   connectionTime: (s: XBeeStore) => s.connection.connectionTime,
   autoDetecting: (s: XBeeStore) => s.connection.autoDetecting,
 
-  // === COMMUNICATION SELECTORS ===
   lastCommandEcho: (s: XBeeStore) =>
     s.communication.commandEchoHistory[0] ?? null,
   commandEchoHistory: (s: XBeeStore) => s.communication.commandEchoHistory,
@@ -33,7 +26,6 @@ export const xbeeSelectors = {
   rssiPollingLastTime: (s: XBeeStore) =>
     s.communication.rssiPolling.lastPollTime,
 
-  // === STATISTICS SELECTORS ===
   connectionStats: (s: XBeeStore) => ({
     packetsReceived: s.statistics.packetsReceived,
     packetsSent: s.statistics.packetsSent,
@@ -45,7 +37,6 @@ export const xbeeSelectors = {
   }),
   frameStats: (s: XBeeStore) => s.statistics.frameStats,
 
-  // === ACTIVITY SELECTORS ===
   activityLog: (s: XBeeStore) => s.activity.log,
   recentActivity: (s: XBeeStore) => s.activity.log.slice(0, 50),
 };

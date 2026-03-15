@@ -1,6 +1,3 @@
-/**
- * XBee Store - Activity Actions
- */
 import type { XBeeStore, ActivityActions, ActivityItem } from "./types";
 import { boundedUnshift } from "./helpers";
 

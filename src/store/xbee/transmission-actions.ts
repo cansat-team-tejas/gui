@@ -1,6 +1,3 @@
-/**
- * XBee Store - Transmission Actions
- */
 import {
   MISSION_CONFIG,
   XBEE_DEFAULTS,

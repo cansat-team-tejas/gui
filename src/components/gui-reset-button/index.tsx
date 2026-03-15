@@ -37,14 +37,15 @@ export const GuiResetButton: React.FC<GuiResetButtonProps> = ({
       // Clear sessionStorage data
       sessionStorage.clear();
 
-      // Create a fresh mission database and set it active
-      try {
-        const newFilename = generateMissionFilename("TEJAS");
-        const mcpService = createMCPService(settingsState.aiServicePort);
-        await mcpService.createDatabase(newFilename);
-        settingsState.setCurrentDatabaseFilename(newFilename);
-      } catch (e) {
-        console.warn("Failed to create mission database on GUI reset:", e);
+      if (!settingsState.backendReadOnly) {
+        try {
+          const newFilename = generateMissionFilename("TEJAS");
+          const mcpService = createMCPService(settingsState.aiServicePort);
+          await mcpService.createDatabase(newFilename);
+          settingsState.setCurrentDatabaseFilename(newFilename);
+        } catch (e) {
+          console.warn("Failed to create mission database on GUI reset:", e);
+        }
       }
     } catch (error) {
       console.error("Failed to reset GUI:", error);

@@ -1,9 +1,6 @@
-/**
- * Telemetry data type definitions
- */
 import type { FrameType } from "../constants";
 
-// Basic telemetry data interface - matches the C++ telemetry format exactly
+// Matches the 35-field C++ firmware telemetry CSV format
 export interface ITelemetryType {
   // 29 fields total based on C++ sprintf format
   TEAM_ID: string; // %s - team ID

@@ -1,9 +1,5 @@
 /**
- * Helper utilities for XBee Store
- */
-
-/**
- * Add item to beginning of array with bounded size
+ * Add item to beginning of array with bounded size.
  */
 export const boundedUnshift = <T>(
   array: T[],
@@ -17,7 +13,7 @@ export const boundedUnshift = <T>(
 };
 
 /**
- * Compute exponential moving average data rate
+ * Exponential moving average data rate.
  */
 export const computeEmaDataRate = (
   currentRate: number,
@@ -39,7 +35,7 @@ export const computeEmaDataRate = (
 };
 
 /**
- * Calculate next mission timing based on current data
+ * Calculate mission timing from start time.
  */
 export const nextMissionTiming = (
   missionStartTime: Date | null,

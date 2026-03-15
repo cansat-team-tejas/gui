@@ -1,20 +1,22 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import {
+  LineChart,
+  Table2,
+  ScrollText,
+  Bot,
+  Info,
+  Settings,
+  LogOut,
+} from "lucide-react";
 import ROUTE_PATHS from "../../route-paths";
-import PlotTabIcon from "../../assets/icons/plot-tab-icon";
-import CSVTabIcon from "../../assets/icons/csv-tab-icon";
-import AITabIcon from "../../assets/icons/ai-tab-icon";
-import LogTabIcon from "../../assets/icons/log-tab-icon";
-import InfoIcon from "../../assets/icons/info-icon";
-import SettingsIcon from "../../assets/icons/settings-icon";
-import LogOutIcon from "../../assets/icons/log-out-icon";
 import ConfirmationDialog from "../confirmation-dialog";
 
 const TABS = [
-  { name: "PLOT TAB", path: ROUTE_PATHS.PLOT_TAB, icon: <PlotTabIcon /> },
-  { name: "CSV TAB", path: ROUTE_PATHS.CSV_TAB, icon: <CSVTabIcon /> },
-  { name: "LOG TAB", path: ROUTE_PATHS.LOG_TAB, icon: <LogTabIcon /> },
-  { name: "AI TAB", path: ROUTE_PATHS.AI_TAB, icon: <AITabIcon /> },
+  { name: "PLOT TAB", path: ROUTE_PATHS.PLOT_TAB, icon: <LineChart size={14} /> },
+  { name: "CSV TAB", path: ROUTE_PATHS.CSV_TAB, icon: <Table2 size={14} /> },
+  { name: "LOG TAB", path: ROUTE_PATHS.LOG_TAB, icon: <ScrollText size={14} /> },
+  { name: "AI TAB", path: ROUTE_PATHS.AI_TAB, icon: <Bot size={14} /> },
 ];
 
 const RouteTab = () => {
@@ -35,12 +37,12 @@ const RouteTab = () => {
   };
 
   const LINKS = [
-    { name: "INFO", path: ROUTE_PATHS.INFO, icon: <InfoIcon /> },
-    { name: "SETTINGS", path: ROUTE_PATHS.SETTINGS, icon: <SettingsIcon /> },
+    { name: "INFO", path: ROUTE_PATHS.INFO, icon: <Info size={16} /> },
+    { name: "SETTINGS", path: ROUTE_PATHS.SETTINGS, icon: <Settings size={16} /> },
     {
       name: "LOG OUT",
       onClick: handleLogout,
-      icon: <LogOutIcon />,
+      icon: <LogOut size={16} />,
     },
   ];
 

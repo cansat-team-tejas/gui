@@ -2,7 +2,7 @@ export {};
 
 declare global {
   interface Window {
-    electronAPI: {
+    electronAPI?: {
       serial: {
         listPorts: () => Promise<{
           success: boolean;
@@ -28,6 +28,16 @@ declare global {
           frameData: Record<string, any>
         ) => Promise<{ success: boolean; error?: string }>;
         onFrameReceived: (callback: (frame: any) => void) => () => void;
+      };
+      shell: {
+        openExternal: (url: string) => void;
+      };
+      installer: {
+        saveCopy: () => Promise<{
+          success: boolean;
+          reason?: string;
+          path?: string;
+        }>;
       };
     };
   }

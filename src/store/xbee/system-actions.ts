@@ -1,7 +1,3 @@
-/**
- * XBee Store - System Actions
- * Handles system-level operations like reset
- */
 import type { XBeeStore } from "./types";
 
 export interface SystemActions {

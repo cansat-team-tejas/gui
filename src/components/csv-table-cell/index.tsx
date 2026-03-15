@@ -1,7 +1,6 @@
 import { ICanSatTelemetryData, getFlightStateName } from "../../data/csv-data";
 import {
   parseLogMessage,
-  getLogDisplayMessage,
 } from "../../constants/log-constants";
 
 interface CsvTableCellProps {
@@ -142,12 +141,8 @@ const CsvTableCell: React.FC<CsvTableCellProps> = ({ value, fieldName }) => {
               .join(", ");
             return `${entryCount} Events: ${categories}`;
           } else {
-            // Show GUI-friendly display message
-            const displayMsg = getLogDisplayMessage(parsedLog.symbol || "");
-            return (
-              displayMsg.substring(0, 35) +
-              (displayMsg.length > 35 ? "..." : "")
-            );
+            const msg = parsedLog.meaning;
+            return msg.substring(0, 35) + (msg.length > 35 ? "..." : "");
           }
         }
         return (

@@ -1,103 +1,16 @@
-// Packet and table type definitions
-export enum PACKET_TYPES {
-  TELEMETRY = "TELEMETRY",
-  LOG = "LOG",
-  COMMAND_RESPONSE = "COMMAND_RESPONSE",
-}
+import type { ITelemetryType } from "../types/telemetry";
+import { getFlightStateName } from "../constants";
 
-export interface IBasePacket {
-  type: PACKET_TYPES;
-  timestamp: Date;
-  rawData: string;
-}
+export { getFlightStateName };
 
-export interface ILogPacket extends IBasePacket {
-  type: PACKET_TYPES.LOG;
-  logLevel: "INFO" | "DEBUG" | "WARN" | "ERROR";
-  message: string;
-}
-
-export interface ICommandResponsePacket extends IBasePacket {
-  type: PACKET_TYPES.COMMAND_RESPONSE;
-  command: string;
-  response: string;
-  success: boolean;
-}
-
-export interface ITelemetryPacket extends IBasePacket {
-  type: PACKET_TYPES.TELEMETRY;
-  data: ITelemetryDataType;
-}
-
-export type IXBeePacketType =
-  | ITelemetryPacket
-  | ILogPacket
-  | ICommandResponsePacket;
-
-export interface ITelemetryDataType {
-  TEAM_ID: string;
-  MISSION_TIME_S: number;
-  PACKET_COUNT: number;
-  ALTITUDE: number;
-  PRESSURE: number;
-  TEMPERATURE: number;
-  VOLTAGE: number;
-  GNSS_TIME: string;
-  LATITUDE: number;
-  LONGITUDE: number;
-  GPS_ALTITUDE: number;
-  SATELLITES: number;
-  ACCEL_X: number;
-  ACCEL_Y: number;
-  ACCEL_Z: number;
-  GYRO_SPIN_RATE: number;
-  FLIGHT_STATE: number;
-  GYRO_X: number;
-  GYRO_Y: number;
-  GYRO_Z: number;
-  ROLL: number;
-  PITCH: number;
-  YAW: number;
-  MAG_X: number;
-  MAG_Y: number;
-  MAG_Z: number;
-  HUMIDITY: number;
-  CURRENT: number;
-  POWER: number;
-  BARO_ALTITUDE: number;
-  MCU_TEMP_C: number;
-  RSSI_DBM: number;
-  RTC_EPOCH: number;
-  CMD_ECHO: string;
-  LOG_DATA: string;
-}
-
-export type ICanSatTelemetryData = ITelemetryDataType;
-export type PacketType = PACKET_TYPES;
-export type ICanSatPacket = IXBeePacketType;
+// Re-export the canonical telemetry type so existing imports still work
+export type ICanSatTelemetryData = ITelemetryType;
 
 export interface TableColumn {
   header: string;
   accessor: keyof ICanSatTelemetryData;
 }
 
-// Flight State Constants and helper
-export const FLIGHT_STATES = {
-  0: "BOOT",
-  1: "TEST_MODE",
-  2: "LAUNCH_PAD",
-  3: "ASCENT",
-  4: "ROCKET_DEPLOY",
-  5: "DESCENT",
-  6: "SECONDARY_DEPLOY",
-  7: "FINAL_DESCENT",
-  8: "IMPACT",
-} as const;
-
-export const getFlightStateName = (state: number): string =>
-  FLIGHT_STATES[state as keyof typeof FLIGHT_STATES] || `UNKNOWN(${state})`;
-
-// Telemetry columns matching C++ specification (29 fields)
 export const columns: TableColumn[] = [
   { header: "TEAM_ID", accessor: "TEAM_ID" },
   { header: "MISSION_TIME_S", accessor: "MISSION_TIME_S" },

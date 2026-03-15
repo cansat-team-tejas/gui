@@ -8,19 +8,15 @@ import PlotTab from "./pages/plot-tab";
 import CSVTab from "./pages/csv-tab";
 import LogTab from "./pages/log-tab";
 import SettingsPage from "./pages/settings";
-import { useXBeeStore } from "./store/xbee";
 import AITab from "./pages/ai-tab";
+import InfoPage from "./pages/info";
 import { QueryProvider } from "./providers/query-provider";
-import { CLUSTER_IDS } from "./constants";
-import { getClusterName } from "./utils/cluster-helpers";
-import { useMCPIntegration } from "./hooks/use-mcp-integration";
+import { useFrameListener } from "./hooks/use-frame-listener";
+import { useSimulation } from "./hooks/use-simulation";
 
 const App = () => {
-  const processFrame = useXBeeStore((state) => state.processFrame);
-  const processATResponse = useXBeeStore((state) => state.processATResponse);
-
-  // Initialize MCP integration for automatic telemetry insertion
-  useMCPIntegration();
+  useFrameListener();
+  useSimulation();
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -31,58 +27,8 @@ const App = () => {
     };
 
     window.addEventListener("keydown", handleKeyDown);
-
-    // Set up XBee frame listener for incoming data
-    let unsubscribeXBeeFrames: (() => void) | undefined;
-
-    if (window.electronAPI?.xbee?.onFrameReceived) {
-      unsubscribeXBeeFrames = window.electronAPI.xbee.onFrameReceived(
-        (frame: any) => {
-          if (frame?.type === "AT_RESPONSE") {
-            // Handle AT response frames directly
-            processATResponse(frame);
-          } else if (frame?.data && typeof frame.data === "string") {
-            // Handle text-based frames with cluster ID filtering for explicit frames
-            // Cluster IDs (explicit frames only):
-            // 0x0001 = TELEMETRY
-            // 0x0002 = LOG
-            // 0x0003 = CMD_RESPONSE
-
-            if (frame.explicitMetadata?.clusterId) {
-              const clusterId = frame.explicitMetadata.clusterId;
-              const clusterName = getClusterName(clusterId);
-
-              switch (clusterId) {
-                case CLUSTER_IDS.TELEMETRY: // 0x0001
-                  processFrame(frame.data);
-                  break;
-                case CLUSTER_IDS.LOG: // 0x0002
-                  processFrame(frame.data);
-                  break;
-                case CLUSTER_IDS.CMD_RESPONSE: // 0x0003
-                  processFrame(frame.data);
-                  break;
-                default:
-                  // Unknown cluster ID - log but still process
-                  console.warn(`Unknown cluster ID: ${clusterName}`);
-                  processFrame(frame.data);
-              }
-            } else {
-              // Standard frame (0x90) or explicit frame without cluster filtering
-              processFrame(frame.data);
-            }
-          }
-        }
-      );
-    }
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      if (unsubscribeXBeeFrames) {
-        unsubscribeXBeeFrames();
-      }
-    };
-  }, [processFrame, processATResponse]);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   return (
     <QueryProvider>
@@ -97,6 +43,7 @@ const App = () => {
               <Route path={ROUTE_PATHS.LOG_TAB} element={<LogTab />} />
               <Route path={ROUTE_PATHS.AI_TAB} element={<AITab />} />
               <Route path={ROUTE_PATHS.SETTINGS} element={<SettingsPage />} />
+              <Route path={ROUTE_PATHS.INFO} element={<InfoPage />} />
             </Routes>
           </main>
         </div>

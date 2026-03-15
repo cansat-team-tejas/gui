@@ -2,9 +2,11 @@ import { useMemo } from "react";
 import { useXBeeStore, xbeeSelectors } from "../../../store/xbee";
 import { useTelemetryLatest } from "../../../hooks/use-xbee";
 import { getSafeTelemetryData } from "../../../utils/telemetry-helpers";
+import type { ITelemetryType } from "../../../types/telemetry";
 
 export interface MissionContext {
   isConnected: boolean;
+  currentRow: ITelemetryType;
   telemetry: {
     altitude: number;
     gpsAltitude: number;
@@ -50,6 +52,7 @@ export const useMissionContext = (): MissionContext => {
   return useMemo(
     () => ({
       isConnected,
+      currentRow: telemetryData,
       telemetry: {
         altitude: telemetryData.ALTITUDE,
         gpsAltitude: telemetryData.GPS_ALTITUDE || 0,

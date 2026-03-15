@@ -11,13 +11,50 @@ export interface AIResponse {
 export const useAIService = () => {
   const settingsState = useSettingsState();
 
+  const buildCurrentRowPayload = (context: MissionContext) => {
+    const row = context.currentRow;
+    return {
+      TEAM_ID: row.TEAM_ID,
+      mission_time_s: row.MISSION_TIME_S,
+      packet_count: row.PACKET_COUNT,
+      altitude: row.ALTITUDE,
+      pressure: row.PRESSURE,
+      temperature: row.TEMPERATURE,
+      voltage: row.VOLTAGE,
+      gnss_time: row.GNSS_TIME,
+      latitude: row.LATITUDE,
+      longitude: row.LONGITUDE,
+      gps_altitude: row.GPS_ALTITUDE,
+      satellites: row.SATELLITES,
+      accel_x: row.ACCEL_X,
+      accel_y: row.ACCEL_Y,
+      accel_z: row.ACCEL_Z,
+      gyro_spin_rate: row.GYRO_SPIN_RATE,
+      flight_state: row.FLIGHT_STATE,
+      gyro_x: row.GYRO_X,
+      gyro_y: row.GYRO_Y,
+      gyro_z: row.GYRO_Z,
+      roll: row.ROLL,
+      pitch: row.PITCH,
+      yaw: row.YAW,
+      mag_x: row.MAG_X,
+      mag_y: row.MAG_Y,
+      mag_z: row.MAG_Z,
+      humidity: row.HUMIDITY,
+      current: row.CURRENT,
+      power: row.POWER,
+      baro_altitude: row.BARO_ALTITUDE,
+      mcu_temp_c: row.MCU_TEMP_C,
+      rssi_dbm: row.RSSI_DBM,
+      rtc_epoch: row.RTC_EPOCH,
+      cmd_echo: row.CMD_ECHO,
+      log_data: row.LOG_DATA,
+    };
+  };
+
   const executeCommand = useCallback(
     async (command: string): Promise<string> => {
-      // Here you would integrate with your command execution system
-      // For now, we'll simulate it
 
-      // You would call your actual command execution function here
-      // await onCommand({ command, teamId: "2024" });
 
       return `Command "${command}" sent to CanSat`;
     },
@@ -33,7 +70,10 @@ export const useAIService = () => {
       try {
         const port = settingsState?.aiServicePort || 8000;
         const mcpService = createMCPService(port);
-        const response = await mcpService.askQuestion(userMessage);
+        const response = await mcpService.askQuestion(
+          userMessage,
+          buildCurrentRowPayload(context)
+        );
 
         // The service returns { answer: { content }, command }
         const answer =

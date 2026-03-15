@@ -105,7 +105,7 @@ const AltitudeChart = () => {
               tick={{ fontSize: "9px", fontWeight: 600 }}
             />
             <Tooltip
-              formatter={(v: any, n: string) => [
+              formatter={(v: any, n?: string) => [
                 `${Number(v).toFixed(1)} m`,
                 n === "barometric" ? "Barometric" : "GPS",
               ]}

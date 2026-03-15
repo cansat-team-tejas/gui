@@ -1,4 +1,5 @@
-import { app, BrowserWindow, Menu, globalShortcut, ipcMain } from "electron";
+import { app, BrowserWindow, dialog, Menu, globalShortcut, ipcMain, shell } from "electron";
+import * as fs from "fs";
 import * as path from "path";
 import { SerialPort } from "serialport";
 const xbeeApi = require("xbee-api");
@@ -16,13 +17,21 @@ const xbeeApiOptions = {
   module: "ZigBee",
 };
 
-function resolveIconPath(): string {
-  // Prefer packaged asset under dist/images; during dev use public/images
-  if (isDev) {
-    return path.join(process.cwd(), "public", "images", "logo-1.svg");
-  }
-  // When packaged, __dirname is dist-electron; dist assets are in ../dist
-  return path.join(__dirname, "..", "dist", "images", "logo-1.svg");
+function resolveIconPath(): string | undefined {
+  const candidates = isDev
+    ? [
+        path.join(process.cwd(), "public", "images", "logo-1.ico"),
+        path.join(process.cwd(), "public", "images", "logo-1.png"),
+        path.join(process.cwd(), "public", "images", "logo-1.svg"),
+      ]
+    : [
+        path.join(process.resourcesPath, "icon.ico"),
+        path.join(__dirname, "..", "dist", "images", "logo-1.ico"),
+        path.join(__dirname, "..", "dist", "images", "logo-1.png"),
+        path.join(__dirname, "..", "dist", "images", "logo-1.svg"),
+      ];
+
+  return candidates.find((candidate) => fs.existsSync(candidate));
 }
 
 // -- Electron Window Setup --
@@ -111,6 +120,68 @@ app.whenReady().then(() => {
   ]);
   Menu.setApplicationMenu(menu);
   registerGlobalShortcuts();
+});
+
+// -- Shell helpers --
+
+ipcMain.on("shell:open-external", (_event, url: string) => {
+  // Only allow https URLs to prevent SSRF / arbitrary process execution
+  if (typeof url === "string" && url.startsWith("https://")) {
+    shell.openExternal(url);
+  }
+});
+
+// -- Installer download helper --
+// Search order for the installer:
+//   1. public/downloads/CanSat-Setup.exe   (copied there by build script)
+//   2. release/*.exe                        (raw electron-builder output)
+// Opens a native Save As dialog so the user can copy it wherever they like.
+ipcMain.handle("installer:save-copy", async () => {
+  const appRoot = isDev
+    ? path.join(app.getAppPath())
+    : path.join(app.getAppPath(), "..");
+
+  // Candidate locations, in priority order
+  const candidates: string[] = [
+    path.join(appRoot, "public", "downloads", "CanSat-Setup.exe"),
+    path.join(appRoot, "dist", "downloads", "CanSat-Setup.exe"),
+  ];
+
+  // Also scan release/ for any .exe with the latest alphabetically
+  const releaseDir = path.join(appRoot, "release");
+  try {
+    const exes = fs
+      .readdirSync(releaseDir)
+      .filter((f: string) => f.endsWith(".exe") && !f.includes("blockmap"))
+      .sort();
+    if (exes.length > 0) {
+      candidates.push(path.join(releaseDir, exes[exes.length - 1]));
+    }
+  } catch {
+    // release/ doesn't exist — that's fine
+  }
+
+  const installerPath = candidates.find((c) => fs.existsSync(c));
+
+  if (!installerPath) {
+    return { success: false, reason: "not-found" };
+  }
+
+  const { canceled, filePath: destPath } = await dialog.showSaveDialog(
+    mainWindow!,
+    {
+      title: "Save CanSat Installer",
+      defaultPath: "CanSat-Setup.exe",
+      filters: [{ name: "Windows Installer", extensions: ["exe"] }],
+    }
+  );
+
+  if (canceled || !destPath) {
+    return { success: false, reason: "canceled" };
+  }
+
+  fs.copyFileSync(installerPath, destPath);
+  return { success: true, path: destPath };
 });
 
 // -- Serial Port Management with XBee (modern) --
@@ -339,7 +410,7 @@ app.on("web-contents-created", (event, contents) => {
   contents.setWindowOpenHandler(() => ({ action: "deny" }));
   contents.on("will-navigate", (event, navigationUrl) => {
     const allowed = new URL(navigationUrl).origin;
-    if (allowed !== "http://localhost:5173" && allowed !== "file://") {
+    if (allowed !== "http://localhost:5178" && allowed !== "file://") {
       event.preventDefault();
     }
   });

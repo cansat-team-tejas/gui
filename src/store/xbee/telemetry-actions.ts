@@ -1,7 +1,3 @@
-/**
- * XBee Store - Telemetry Actions
- * Handles telemetry data processing and RSSI management
- */
 import type { ITelemetryType } from "../../types/telemetry";
 import type { XBeeStore, TelemetryActions } from "./types";
 import {

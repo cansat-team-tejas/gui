@@ -33,6 +33,7 @@ export interface SettingsState {
   // AI service configuration
   aiServicePort: number;
   currentDatabaseFilename: string | null;
+  backendReadOnly: boolean;
 }
 
 export type CriticalCommand =

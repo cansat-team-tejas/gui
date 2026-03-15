@@ -1,4 +1,5 @@
 import { useTelemetryHistory } from "../../../hooks/use-xbee";
+import { getFlightStateName } from "../../../constants";
 
 const FlightDetails = () => {
   const history = useTelemetryHistory();
@@ -10,19 +11,12 @@ const FlightDetails = () => {
   const teamId = latest?.TEAM_ID ?? "UNKNOWN";
   const gnssTime = latest?.GNSS_TIME ?? "N/A";
 
-  // Format mission time as MM:SS
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins.toString().padStart(2, "0")}:${secs
       .toString()
       .padStart(2, "0")}`;
-  };
-
-  // Get flight state name
-  const getFlightStateName = (state: number): string => {
-    const stateNames = ["IDLE", "ASCENT", "DESCENT", "LANDED", "ABORT"];
-    return stateNames[state] || "UNKNOWN";
   };
 
   // Get flight state color

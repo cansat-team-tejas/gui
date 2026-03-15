@@ -64,7 +64,7 @@ const AITab: React.FC = () => {
   );
 
   return (
-    <section about="AI Mission Assistant">
+    <section aria-label="AI Mission Assistant">
       <div className="h-full flex flex-col bg-white">
         <div className="flex items-center justify-end px-4 pt-2 pb-1 w-full">
           <Button

@@ -1,15 +1,8 @@
-/**
- * XBee Store - Main Store Implementation
- * This is the main store that combines all the separated action modules
- */
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
-// Types and interfaces
 import type { XBeeStore } from "./types";
-
-// Action creators
 import { createTelemetryActions } from "./telemetry-actions";
 import { createCommunicationActions } from "./communication-actions";
 import { createConnectionActions } from "./connection-actions";
@@ -18,7 +11,6 @@ import { createTransmissionActions } from "./transmission-actions";
 import { createActivityActions } from "./activity-actions";
 import { createSystemActions } from "./system-actions";
 
-// Selectors
 export { xbeeSelectors } from "./selectors";
 export type {
   XBeeStore,
@@ -26,10 +18,6 @@ export type {
   FrameStats,
   ConnectionStats,
 } from "./types";
-
-// ============================================================================
-// STORE IMPLEMENTATION
-// ============================================================================
 
 export const useXBeeStore = create<XBeeStore>()(
   subscribeWithSelector(
@@ -44,10 +32,6 @@ export const useXBeeStore = create<XBeeStore>()(
       const systemActions = createSystemActions(set, get);
 
       return {
-        // ========================================================================
-        // INITIAL STATE
-        // ========================================================================
-
         telemetry: {
           history: [],
           lastUpdate: null,
@@ -97,10 +81,6 @@ export const useXBeeStore = create<XBeeStore>()(
         activity: {
           log: [],
         },
-
-        // ========================================================================
-        // ACTIONS - All actions are now imported from separate modules
-        // ========================================================================
 
         ...telemetryActions,
         ...communicationActions,

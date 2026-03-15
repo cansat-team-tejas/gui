@@ -1,15 +1,8 @@
-/**
- * XBee Store Types and Interfaces
- */
 import type {
   ITelemetryType,
   ICommandType,
   ILogEntryType,
 } from "../../types/telemetry";
-
-// ============================================================================
-// ACTIVITY TYPES
-// ============================================================================
 
 export type ActivityItem = {
   timestamp: Date;
@@ -17,10 +10,6 @@ export type ActivityItem = {
   frameType?: string;
   details?: string;
 };
-
-// ============================================================================
-// STATISTICS TYPES
-// ============================================================================
 
 export interface FrameStats {
   telemetryCount: number;
@@ -34,10 +23,6 @@ export interface ConnectionStats {
   packetsSent: number;
   errorsCount: number;
 }
-
-// ============================================================================
-// STATE INTERFACES
-// ============================================================================
 
 export interface TelemetryState {
   history: ITelemetryType[];
@@ -83,10 +68,6 @@ export interface StatisticsState {
 export interface ActivityState {
   log: ActivityItem[];
 }
-
-// ============================================================================
-// ACTION INTERFACES
-// ============================================================================
 
 export interface TelemetryActions {
   updateTelemetry: (data: ITelemetryType) => void;
@@ -138,19 +119,13 @@ export interface ActivityActions {
   clearActivityLog: () => void;
 }
 
-// ============================================================================
-// MAIN STORE INTERFACE
-// ============================================================================
-
 export interface XBeeStore {
-  // === STATE ===
   telemetry: TelemetryState;
   communication: CommunicationState;
   connection: ConnectionState;
   statistics: StatisticsState;
   activity: ActivityState;
 
-  // === ACTIONS ===
   updateTelemetry: (data: ITelemetryType) => void;
   clearTelemetry: () => void;
   getTelemetryByTimeRange: (startTime: Date, endTime: Date) => ITelemetryType[];

@@ -1,6 +1,3 @@
-/**
- * XBee Store - Communication Actions
- */
 import type { ICommandType, ILogEntryType } from "../../types/telemetry";
 import type { XBeeStore, CommunicationActions } from "./types";
 import { boundedUnshift } from "./helpers";
@@ -57,12 +54,11 @@ export const createCommunicationActions = (
         return false;
       }
 
-      // Create AT command frame
       const frame = {
-        type: 0x08, // AT Command frame type
+        type: 0x08,
         id: Math.floor(Math.random() * 255) + 1,
         command: command,
-        commandParameter: new Uint8Array([]), // No parameters for basic commands
+        commandParameter: new Uint8Array([]),
       };
 
       const result = await window.electronAPI.xbee.sendFrame(frame);

@@ -22,7 +22,6 @@ const CommunicationPanel = () => {
   const lastCommandEcho = useLastCommandEcho();
   const rssiUplink = useXBeeStore(xbeeSelectors.rssiUplink);
   const rssiDownlink = useXBeeStore(xbeeSelectors.rssiDownlink);
-  const rssiLastUpdate = useXBeeStore(xbeeSelectors.rssiLastUpdate);
 
   // Memoize expensive calculations
   const safeTelemetry = useMemo(
@@ -101,11 +100,11 @@ const CommunicationPanel = () => {
         ),
       },
     ],
-    [commStats, rssiStatus.color, rssiDownlink, rssiUplink, rssiLastUpdate]
+    [commStats, rssiStatus.color, rssiDownlink, rssiUplink]
   );
 
   return (
-    <section about="Communication Information">
+    <section aria-label="Communication Information">
       <div className="border border-b-black text-[13px] font-bold px-2 py-1 bg-[#D9D9D9]">
         COMMUNICATION INFORMATION
       </div>

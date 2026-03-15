@@ -37,6 +37,8 @@ export const useSettingsState = (): SettingsState & {
   // Database filename
   currentDatabaseFilename: string | null;
   setCurrentDatabaseFilename: (filename: string | null) => void;
+  backendReadOnly: boolean;
+  setBackendReadOnly: (readOnly: boolean) => void;
 } => {
   const [isScanning, setIsScanning] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -58,6 +60,7 @@ export const useSettingsState = (): SettingsState & {
   const [currentDatabaseFilename, setCurrentDatabaseFilename] = useState<
     string | null
   >(null);
+  const [backendReadOnly, setBackendReadOnly] = useState(false);
 
   // On mount, try to read active DB from backend and set it
   useEffect(() => {
@@ -65,6 +68,7 @@ export const useSettingsState = (): SettingsState & {
       try {
         const mcp = createMCPService(aiServicePort);
         const res = await mcp.getCurrentDatabase();
+        setBackendReadOnly(Boolean(res?.read_only));
         if (res?.current_db_path) {
           // Store just the basename for display if path like databases/mission_*.db
           const parts = res.current_db_path.split("/");
@@ -90,6 +94,7 @@ export const useSettingsState = (): SettingsState & {
     confirmationState,
     aiServicePort,
     currentDatabaseFilename,
+    backendReadOnly,
     setIsScanning,
     setIsConnecting,
     setConnectionStatus,
@@ -99,6 +104,7 @@ export const useSettingsState = (): SettingsState & {
     setConfirmationState,
     setAiServicePort,
     setCurrentDatabaseFilename,
+    setBackendReadOnly,
   };
 };
 
@@ -273,22 +279,21 @@ export const useCommandManagement = (
         settingsState.setCommandStatus("GUI reset for new mission");
         await new Promise((resolve) => setTimeout(resolve, 200));
 
-        // Create new database file for this mission
-        try {
-          const newFilename = generateMissionFilename("TEJAS");
-          const mcpService = createMCPService(settingsState.aiServicePort);
-          // Create DB under databases/ and set as active
-          await mcpService.createDatabase(newFilename);
-          // Store just the filename label locally for UI reference
-          settingsState.setCurrentDatabaseFilename(newFilename);
-          settingsState.setCommandStatus(
-            `New mission database created: ${newFilename}`
-          );
-        } catch (error) {
-          console.warn("Failed to create mission database:", error);
-          settingsState.setCommandStatus(
-            "Database creation failed, continuing with command"
-          );
+        if (!settingsState.backendReadOnly) {
+          try {
+            const newFilename = generateMissionFilename("TEJAS");
+            const mcpService = createMCPService(settingsState.aiServicePort);
+            await mcpService.createDatabase(newFilename);
+            settingsState.setCurrentDatabaseFilename(newFilename);
+            settingsState.setCommandStatus(
+              `New mission database created: ${newFilename}`
+            );
+          } catch (error) {
+            console.warn("Failed to create mission database:", error);
+            settingsState.setCommandStatus(
+              "Database creation failed, continuing with command"
+            );
+          }
         }
       }
 
@@ -307,25 +312,26 @@ export const useCommandManagement = (
               `GUI reset triggered by: ${command}`
             );
 
-            // After reset, also create a fresh mission database and set it active
-            (async () => {
-              try {
-                const newFilename = generateMissionFilename("TEJAS");
-                const mcpService = createMCPService(
-                  settingsState.aiServicePort
-                );
-                await mcpService.createDatabase(newFilename);
-                settingsState.setCurrentDatabaseFilename(newFilename);
-                settingsState.setCommandStatus(
-                  `New mission database created: ${newFilename}`
-                );
-              } catch (error) {
-                console.warn(
-                  "Failed to create mission database after reset command:",
-                  error
-                );
-              }
-            })();
+            if (!settingsState.backendReadOnly) {
+              (async () => {
+                try {
+                  const newFilename = generateMissionFilename("TEJAS");
+                  const mcpService = createMCPService(
+                    settingsState.aiServicePort
+                  );
+                  await mcpService.createDatabase(newFilename);
+                  settingsState.setCurrentDatabaseFilename(newFilename);
+                  settingsState.setCommandStatus(
+                    `New mission database created: ${newFilename}`
+                  );
+                } catch (error) {
+                  console.warn(
+                    "Failed to create mission database after reset command:",
+                    error
+                  );
+                }
+              })();
+            }
           }, 500);
         }
       } else {

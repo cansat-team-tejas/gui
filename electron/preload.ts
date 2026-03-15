@@ -16,6 +16,12 @@ interface ElectronAPI {
     sendFrame: (frameData: any) => Promise<any>;
     onFrameReceived: (callback: (frame: any) => void) => () => void;
   };
+  shell: {
+    openExternal: (url: string) => void;
+  };
+  installer: {
+    saveCopy: () => Promise<{ success: boolean; reason?: string; path?: string }>;
+  };
 }
 
 const electronAPI: ElectronAPI = {
@@ -49,6 +55,13 @@ const electronAPI: ElectronAPI = {
       ipcRenderer.on("xbee:frame-received", listener);
       return () => ipcRenderer.removeListener("xbee:frame-received", listener);
     },
+  },
+  shell: {
+    openExternal: (url: string) =>
+      ipcRenderer.send("shell:open-external", url),
+  },
+  installer: {
+    saveCopy: () => ipcRenderer.invoke("installer:save-copy"),
   },
 };
 
