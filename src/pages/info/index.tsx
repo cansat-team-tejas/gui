@@ -32,7 +32,7 @@ import { FLIGHT_STATES } from "../../constants";
 
 const GITHUB_REPO = "https://github.com/cansat-team-tejas";
 const RELEASE_URL =
-  "https://github.com/cansat-team-tejas/cansat-gui/releases/latest/download/CanSat-Setup.exe";
+  "https://github.com/cansat-team-tejas/gui/releases/tag/release";
 
 // Author personal links
 const PORTFOLIO_URL = "https://sagargujarathi.dev";

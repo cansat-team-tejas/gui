@@ -20,6 +20,7 @@ import {
   createMCPService,
   generateMissionFilename,
 } from "../../utils/mcp-service";
+import { useConfigStore } from "../../store/config";
 
 export const useSettingsState = (): SettingsState & {
   setIsScanning: (scanning: boolean) => void;
@@ -54,15 +55,9 @@ export const useSettingsState = (): SettingsState & {
       timeRemaining: 30,
     }
   );
-  // AI service port (default from env or 8000)
-  const [aiServicePort, setAiServicePort] = useState<number | string>(() => {
-    const envUrl = (import.meta as any).env.VITE_API_URL;
-    if (envUrl) {
-      // If it's a simple number (port), return it as number, otherwise return full URL
-      return isNaN(Number(envUrl)) ? envUrl : Number(envUrl);
-    }
-    return 8000;
-  });
+  // AI service port from global store
+  const aiServicePort = useConfigStore((state) => state.backendUrl);
+  const setAiServicePort = useConfigStore((state) => state.setBackendUrl);
   // Current database filename for MCP service
   const [currentDatabaseFilename, setCurrentDatabaseFilename] = useState<
     string | null

@@ -83,15 +83,17 @@ export class MCPService {
    */
   constructor(urlOrPort?: string | number) {
     const envUrl = (import.meta as any).env.VITE_API_URL;
+    const finalVal = urlOrPort ?? envUrl ?? 8000;
 
-    if (urlOrPort) {
-      if (typeof urlOrPort === "number") {
-        this.baseUrl = `http://localhost:${urlOrPort}`;
-      } else {
-        this.baseUrl = urlOrPort;
-      }
+    if (typeof finalVal === "number") {
+      this.baseUrl = `http://localhost:${finalVal}`;
     } else {
-      this.baseUrl = envUrl || `http://localhost:8000`;
+      // If it's a string, check if it's just a number string (port)
+      if (!isNaN(Number(finalVal)) && finalVal.trim() !== "") {
+        this.baseUrl = `http://localhost:${finalVal}`;
+      } else {
+        this.baseUrl = finalVal;
+      }
     }
   }
 

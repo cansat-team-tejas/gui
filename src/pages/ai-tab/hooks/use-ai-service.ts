@@ -68,8 +68,7 @@ export const useAIService = () => {
     ): Promise<AIResponse> => {
       // Call remote MCP AI service (/ask) if available
       try {
-        const port = settingsState?.aiServicePort || 8000;
-        const mcpService = createMCPService(port);
+        const mcpService = createMCPService(settingsState.aiServicePort);
         const response = await mcpService.askQuestion(
           userMessage,
           buildCurrentRowPayload(context)
