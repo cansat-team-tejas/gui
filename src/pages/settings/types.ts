@@ -31,7 +31,7 @@ export interface SettingsState {
   resetTimeout: NodeJS.Timeout | null;
   confirmationState: ConfirmationState;
   // AI service configuration
-  aiServicePort: number;
+  aiServicePort: number | string;
   currentDatabaseFilename: string | null;
   backendReadOnly: boolean;
 }

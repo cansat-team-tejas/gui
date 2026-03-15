@@ -32,8 +32,8 @@ export const useSettingsState = (): SettingsState & {
     state: ConfirmationState | ((prev: ConfirmationState) => ConfirmationState)
   ) => void;
   // AI service port
-  aiServicePort: number;
-  setAiServicePort: (port: number) => void;
+  aiServicePort: number | string;
+  setAiServicePort: (port: number | string) => void;
   // Database filename
   currentDatabaseFilename: string | null;
   setCurrentDatabaseFilename: (filename: string | null) => void;
@@ -54,8 +54,15 @@ export const useSettingsState = (): SettingsState & {
       timeRemaining: 30,
     }
   );
-  // AI service port (default 8000)
-  const [aiServicePort, setAiServicePort] = useState<number>(8000);
+  // AI service port (default from env or 8000)
+  const [aiServicePort, setAiServicePort] = useState<number | string>(() => {
+    const envUrl = (import.meta as any).env.VITE_API_URL;
+    if (envUrl) {
+      // If it's a simple number (port), return it as number, otherwise return full URL
+      return isNaN(Number(envUrl)) ? envUrl : Number(envUrl);
+    }
+    return 8000;
+  });
   // Current database filename for MCP service
   const [currentDatabaseFilename, setCurrentDatabaseFilename] = useState<
     string | null

@@ -82,13 +82,16 @@ export class MCPService {
    * @param urlOrPort - Full base URL or port number (assumes localhost) for the backend service.
    */
   constructor(urlOrPort?: string | number) {
-    if (typeof urlOrPort === "number") {
-      this.baseUrl = `http://localhost:${urlOrPort}`;
+    const envUrl = (import.meta as any).env.VITE_API_URL;
+
+    if (urlOrPort) {
+      if (typeof urlOrPort === "number") {
+        this.baseUrl = `http://localhost:${urlOrPort}`;
+      } else {
+        this.baseUrl = urlOrPort;
+      }
     } else {
-      this.baseUrl =
-        (import.meta as any).env?.VITE_API_URL ||
-        urlOrPort ||
-        `http://localhost:8000`;
+      this.baseUrl = envUrl || `http://localhost:8000`;
     }
   }
 
