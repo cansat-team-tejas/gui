@@ -13,7 +13,7 @@ interface ConfigState {
 function resolveBackendUrl(): string {
   const envUrl = import.meta.env.VITE_API_URL as string | undefined;
   if (envUrl) return envUrl;
-  return "http://localhost:8000";
+  return "https://api.tejas.aspiredev.in";
 }
 
 export const useConfigStore = create<ConfigState>()(
