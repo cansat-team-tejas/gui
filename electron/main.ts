@@ -70,6 +70,13 @@ function createWindow(): void {
     }
   });
 
+  // Fallback for BrowserRouter refresh on sub-paths in production/packaged app
+  mainWindow.webContents.on("did-fail-load", () => {
+    if (!isDev && mainWindow) {
+      mainWindow.loadFile(path.join(__dirname, "../dist/index.html")).catch(console.error);
+    }
+  });
+
   mainWindow.on("closed", () => {
     mainWindow = null;
   });
@@ -410,7 +417,8 @@ app.on("web-contents-created", (event, contents) => {
   contents.setWindowOpenHandler(() => ({ action: "deny" }));
   contents.on("will-navigate", (event, navigationUrl) => {
     const allowed = new URL(navigationUrl).origin;
-    if (allowed !== "http://localhost:5178" && allowed !== "file://") {
+    // Allow localhost (on any port) and file protocol for development flexibility
+    if (!allowed.startsWith("http://localhost") && allowed !== "file://") {
       event.preventDefault();
     }
   });
