@@ -4,7 +4,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom Leaflet Popup Styles for Design System */
 .leaflet-popup-content-wrapper {
   border-radius: 0 !important;
   border: 1px solid #000 !important;
@@ -26,6 +25,3 @@
 .custom-popup .leaflet-popup-close-button {
   display: none !important;
 }
-
-
-

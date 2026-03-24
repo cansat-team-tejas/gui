@@ -9,11 +9,11 @@ const EnvironmentalPanel = () => {
   const pressure = latest?.PRESSURE ?? 0;
   const humidity = latest?.HUMIDITY ?? 0;
   const mcuTemp = latest?.MCU_TEMP_C ?? 0;
-  // Battery percentage calculation for 3S LiPo (9.0V = 0%, 12.6V = 100%)
+  // Battery percentage calculation for 2S LiPo (6.6V = 0%, 8.4V = 100%)
   const voltage = latest?.VOLTAGE ?? 0;
-  const batteryPercent = Math.max(
+  const batteryPercent = voltage === 0 ? 0 : Math.max(
     0,
-    Math.min(100, ((voltage - 9.0) / (12.6 - 9.0)) * 100)
+    Math.min(100, ((voltage - 6.6) / (8.4 - 6.6)) * 100)
   );
 
   // Helper function to get temperature color

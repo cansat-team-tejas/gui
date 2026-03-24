@@ -1,6 +1,5 @@
 import type { ITelemetryType } from "../types/telemetry";
 
-// ─── Mission constants ──────────────────────────────────────────────────────
 
 const TEAM_ID = "1046";
 const MISSION_PERIOD = 80; // seconds — simulation loop length
@@ -20,7 +19,6 @@ const STATE_SYMBOLS: Record<number, string> = {
   8: "*", // IMPACT
 };
 
-// ─── Physics helpers ────────────────────────────────────────────────────────
 
 /**
  * Standard atmosphere pressure at altitude h (metres).
@@ -39,7 +37,6 @@ const gaussNoise = (std: number): number => {
   return std * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
 };
 
-// ─── Flight state machine ───────────────────────────────────────────────────
 
 interface PhaseInfo {
   state: number;
@@ -80,7 +77,6 @@ function getFlightPhase(t: number): PhaseInfo {
   return { state: 8, altitude: 0, phase: "impact" };
 }
 
-// ─── Log event generation ───────────────────────────────────────────────────
 
 // Module-level previous-state tracker (reset on sim restart)
 let _prevState = -1;
@@ -101,7 +97,6 @@ function buildLogData(t: number, currentState: number): string {
   return "";
 }
 
-// ─── Frame generator ────────────────────────────────────────────────────────
 
 /**
  * Pure function: generates one realistic telemetry frame at time `t` seconds.
@@ -120,7 +115,7 @@ export function generateSimFrame(
   const isDescent =
     phase === "descent" || phase === "final_descent";
 
-  // ── Accelerometers (m/s²) ──────────────────────────────────────────────
+  // Accelerometers (m/s²)
   const accelX = gaussNoise(isBoosting ? 1.2 : isDeploy ? 2.5 : 0.15);
   const accelY = gaussNoise(isBoosting ? 1.0 : isDeploy ? 2.5 : 0.15);
   const accelZ = isBoosting
@@ -129,42 +124,42 @@ export function generateSimFrame(
     ? 4.5 + gaussNoise(4.0) // pyro shock
     : 9.81 + gaussNoise(0.2); // normal gravity
 
-  // ── Gyroscopes (deg/s) ─────────────────────────────────────────────────
+  // Gyroscopes (deg/s)
   const gyroStd = isDeploy ? 25 : isBoosting ? 8 : isDescent ? 3 : 0.5;
   const gyroX = gaussNoise(gyroStd);
   const gyroY = gaussNoise(gyroStd);
   const gyroZ = gaussNoise(gyroStd * 0.6);
   const spinRate = Math.abs(gaussNoise(gyroStd)) + Math.abs(gyroZ);
 
-  // ── Attitude (degrees) ─────────────────────────────────────────────────
+  // Attitude (degrees)
   const roll = gaussNoise(isDeploy ? 35 : isBoosting ? 8 : 2.5);
   const pitch = gaussNoise(isDeploy ? 30 : isBoosting ? 6 : 2.0);
   const yaw = (t * 3.0) % 360;
 
-  // ── GPS ────────────────────────────────────────────────────────────────
+  // GPS
   const dLat = h * 1.2e-6 * Math.sin(t * 0.08);
   const dLon = h * 1.5e-6 * Math.cos(t * 0.06);
   const sats = state > 1 ? Math.round(9 + gaussNoise(1.5)) : 0;
 
-  // ── Power ──────────────────────────────────────────────────────────────
+  // Power
   const voltage = (isBoosting ? 7.15 : 7.38) + gaussNoise(0.04);
   const current = (isBoosting ? 2.1 : 0.85) + gaussNoise(0.08);
 
-  // ── Environment ────────────────────────────────────────────────────────
+  // Environment
   const pressure = pressureAtAlt(h) + gaussNoise(25);
   const temperature = tempAtAlt(h) + gaussNoise(0.4);
   const humidity = Math.max(10, 55 - h * 0.035) + gaussNoise(1.5);
   const mcuTemp = 38 + (isBoosting ? 3 : 0) + gaussNoise(0.8);
 
-  // ── Magnetometer (µT, Earth field near Sriharikota) ────────────────────
+  // Magnetometer (µT, Earth field near Sriharikota)
   const magX = 28.4 + gaussNoise(1.5);
   const magY = -14.8 + gaussNoise(1.5);
   const magZ = 41.2 + gaussNoise(1.5);
 
-  // ── RSSI (dBm) — degrades with altitude + noise ────────────────────────
+  // RSSI — degrades with altitude
   const rssi = Math.round(-55 - h * 0.025 + gaussNoise(4));
 
-  // ── GNSStime string ────────────────────────────────────────────────────
+  // GNSS time string
   const now = new Date();
   const gnssTime = [
     now.getUTCHours(),

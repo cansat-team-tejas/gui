@@ -10,7 +10,6 @@ export const createSystemActions = (
 ): SystemActions => ({
   resetStore: () =>
     set((state: XBeeStore) => {
-      // Reset telemetry
       state.telemetry = {
         history: [],
         lastUpdate: null,
@@ -19,7 +18,6 @@ export const createSystemActions = (
         totalMissionTime: 0,
       };
 
-      // Reset communication but keep RSSI polling settings
       const currentPollingSettings = state.communication.rssiPolling;
       state.communication = {
         commandEchoHistory: [],
@@ -35,7 +33,6 @@ export const createSystemActions = (
         },
       };
 
-      // Reset statistics
       state.statistics = {
         packetsReceived: 0,
         packetsSent: 0,
@@ -50,11 +47,8 @@ export const createSystemActions = (
         },
       };
 
-      // Clear activity log
-      state.activity = {
-        log: [],
-      };
+      state.activity = { log: [] };
 
-      // Note: Connection state is preserved to avoid disconnecting
+      // Connection state preserved intentionally to avoid mid-mission disconnects
     }),
 });

@@ -6,6 +6,8 @@ import { createMCPService } from "../../../utils/mcp-service";
 export interface AIResponse {
   response: string;
   commandExecuted?: string;
+  sql?: string;
+  rowCount?: number;
 }
 
 export const useAIService = () => {
@@ -79,9 +81,11 @@ export const useAIService = () => {
           typeof response.answer === "string"
             ? response.answer
             : response.answer?.content || "";
-        const command = response.command || null;
+        const command = response.command || undefined;
+        const sqlQuery = response.sql || "";
+        const rowCount = response.details?.row_count;
 
-        console.log("AI Service Response:", { answer, command });
+        console.log("AI Service Response:", { answer, command, sqlQuery });
 
         if (command) {
           console.log(
@@ -128,11 +132,14 @@ export const useAIService = () => {
           setTimeout(() => {
             clearInterval(intervalId);
           }, 30000);
-
-          return { response: answer, commandExecuted: command };
         }
 
-        return { response: answer };
+        return { 
+          response: answer, 
+          commandExecuted: command,
+          sql: sqlQuery,
+          rowCount: rowCount
+        };
       } catch (err) {
         // Fallback to local heuristics if the AI service is unavailable
         console.warn(

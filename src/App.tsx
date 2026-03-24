@@ -27,7 +27,24 @@ const App = () => {
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+
+    // Auto-fullscreen for browser environment on first interaction
+    const handleFirstInteraction = () => {
+      if (!window.electronAPI && !document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {
+          // Ignore errors (e.g., if fullscreen is not permitted)
+        });
+      }
+      // Remove listener after first interaction
+      window.removeEventListener("click", handleFirstInteraction);
+    };
+
+    window.addEventListener("click", handleFirstInteraction);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("click", handleFirstInteraction);
+    };
   }, []);
 
   return (

@@ -14,10 +14,22 @@ export const createTelemetryActions = (
     set((state: XBeeStore) => {
       const now = new Date();
 
-      // Add to history with bounded size
+      // Async push to MCP server if in CANSAT hardware mode
+      import("../simulation").then(({ useSimulationStore }) => {
+        if (useSimulationStore.getState().mode === "cansat") {
+          import("../config").then(({ useConfigStore }) => {
+            import("../../utils/mcp-service").then(({ createMCPService }) => {
+              const url = useConfigStore.getState().backendUrl;
+              createMCPService(url)
+                .pushTelemetry(data)
+                .catch((err) => console.error("Failed to push telemetry to MCP:", err));
+            });
+          });
+        }
+      });
+
       boundedUnshift(state.telemetry.history, data, 1000);
 
-      // Calculate data rate using exponential moving average
       const { rate, lastUpdate } = computeEmaDataRate(
         state.telemetry.dataRate,
         now,
@@ -26,15 +38,37 @@ export const createTelemetryActions = (
       state.telemetry.dataRate = rate;
       state.telemetry.lastUpdate = lastUpdate;
 
-      // Update mission timing
       const timing = nextMissionTiming(state.telemetry.missionStartTime, now);
       state.telemetry.missionStartTime = timing.missionStartTime;
       state.telemetry.totalMissionTime = timing.totalMissionTime;
 
-      // Update statistics
       state.statistics.frameStats.telemetryCount += 1;
 
-      // Process uplink RSSI from CanSat (RSSI_DBM = uplink signal strength)
+      // Extract and store command echo if present (humanizes simulation/direct updates)
+      if (data.CMD_ECHO && data.CMD_ECHO.trim()) {
+        const commandEcho = {
+          TEAM_ID: data.TEAM_ID || "046",
+          MISSION_TIME: data.MISSION_TIME_S?.toString() || "",
+          COMMAND_ECHO: data.CMD_ECHO,
+          timestamp: new Date(),
+        };
+        // We use the internal state because we are inside a 'set' call (immer)
+        boundedUnshift(state.communication.commandEchoHistory, commandEcho, 100);
+        state.statistics.frameStats.commandEchoCount += 1;
+      }
+
+      // Extract and store log data if present
+      if (data.LOG_DATA && data.LOG_DATA.trim()) {
+        const logEntry = {
+          TEAM_ID: data.TEAM_ID || "046",
+          MISSION_TIME: data.MISSION_TIME_S?.toString() || "",
+          MESSAGE: data.LOG_DATA,
+          timestamp: new Date(),
+        };
+        boundedUnshift(state.communication.logEntries, logEntry, 500);
+        state.statistics.frameStats.logEntryCount += 1;
+      }
+
       if (data.RSSI_DBM !== undefined && data.RSSI_DBM !== null) {
         state.communication.rssi.uplink = data.RSSI_DBM;
         state.communication.rssi.lastUpdate = now;

@@ -11,6 +11,7 @@ import {
   useSetSelectedPort,
 } from "../../hooks/use-xbee";
 import { useSimulationStore } from "../../store/simulation";
+import { useConfigStore } from "../../store/config";
 
 // Settings components
 import {
@@ -196,6 +197,41 @@ const SettingsPage: React.FC = () => {
                 port={settingsState.aiServicePort}
                 onPortChange={(p) => settingsState.setAiServicePort(p)}
               />
+            </div>
+
+            <div className="mt-4 border border-black p-3 bg-white">
+              <div className="text-[10px] font-bold tracking-widest text-black mb-2 uppercase">
+                XBee Target Definition (DH / DL)
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[9px] font-bold text-gray-500 mb-1">
+                    DESTINATION HIGH (DH)
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={8}
+                    value={useConfigStore().xbeeDH}
+                    onChange={(e) => useConfigStore.getState().setXbeeDH(e.target.value.toUpperCase())}
+                    className="w-full border border-black px-2 py-1.5 text-xs font-mono uppercase focus:outline-none focus:ring-1 focus:ring-black"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] font-bold text-gray-500 mb-1">
+                    DESTINATION LOW (DL)
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={8}
+                    value={useConfigStore().xbeeDL}
+                    onChange={(e) => useConfigStore.getState().setXbeeDL(e.target.value.toUpperCase())}
+                    className="w-full border border-black px-2 py-1.5 text-xs font-mono uppercase focus:outline-none focus:ring-1 focus:ring-black"
+                  />
+                </div>
+              </div>
+              <div className="mt-2 text-[9px] text-gray-500">
+                These settings configure the 64-bit destination address for outgoing packets. Leave as defaults unless using a custom receiver.
+              </div>
             </div>
           </Panel>
 

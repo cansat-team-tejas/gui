@@ -11,6 +11,8 @@ import "leaflet/dist/leaflet.css";
 import L, { LatLngExpression } from "leaflet";
 import { useTelemetryHistory } from "../../../hooks/use-xbee";
 
+import { Rocket, Target } from "lucide-react";
+
 // Fix default Leaflet icons
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
@@ -119,8 +121,8 @@ const GPSPlot = () => {
         <Marker position={LAUNCH_SITE} icon={icons.launch}>
           <Popup className="custom-popup" closeButton={false}>
             <div className="font-mono text-xs p-1">
-              <div className="font-bold text-green-600 mb-1">
-                🚀 LAUNCH SITE
+              <div className="font-bold text-green-600 mb-1 flex items-center gap-1 border-b border-green-200 pb-1">
+                <Rocket size={12} /> LAUNCH SITE
               </div>
               <div className="text-gray-700">Team Tejas</div>
               <div className="text-gray-600 text-[10px] mt-1">
@@ -143,8 +145,8 @@ const GPSPlot = () => {
           <Marker position={latest.pos} icon={icons.current}>
             <Popup className="custom-popup" closeButton={false}>
               <div className="font-mono text-xs p-1">
-                <div className="font-bold text-red-600 mb-1">
-                  🎯 CURRENT POSITION
+                <div className="font-bold text-red-600 mb-1 flex items-center gap-1 border-b border-red-200 pb-1">
+                  <Target size={12} /> CURRENT POSITION
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-[10px]">
                   <div>

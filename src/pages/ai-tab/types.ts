@@ -4,6 +4,8 @@ export interface ChatMessage {
   content: string;
   timestamp: Date;
   commandExecuted?: string;
+  sql?: string;
+  rowCount?: number;
 }
 
 export const WELCOME_MESSAGE: ChatMessage = {

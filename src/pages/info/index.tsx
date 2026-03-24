@@ -9,11 +9,6 @@ import {
   Trophy,
   MapPin,
   ExternalLink,
-  Activity,
-  Zap,
-  Play,
-  Square,
-  RotateCcw,
   Terminal,
   Wifi,
   Database,
@@ -22,17 +17,16 @@ import {
   Globe,
   CheckCircle,
   Loader2,
+  Zap,
+  Activity,
 } from "lucide-react";
 import { useState } from "react";
-import { useXBeeStore } from "../../store/xbee";
-import { useSimulationStore } from "../../store/simulation";
-import { FLIGHT_STATES } from "../../constants";
 
 // ── Config ──────────────────────────────────────────────────────────────────
 
 const GITHUB_REPO = "https://github.com/cansat-team-tejas";
 const RELEASE_URL =
-  "https://github.com/cansat-team-tejas/gui/releases/tag/release";
+  "https://github.com/cansat-team-tejas/cansat-gui/releases/latest/download/CanSat-Setup.exe";
 
 // Author personal links
 const PORTFOLIO_URL = "https://sagargujarathi.dev";
@@ -55,9 +49,10 @@ const TEAM_MEMBERS = [
     role: "Software Lead",
     initials: "SG",
     description:
-      "Ground station GUI, real-time telemetry pipeline, Electron desktop application, MCP AI integration",
+      "Ground station GUI, real-time telemetry pipeline, Electron desktop application, AI integration",
     icon: <Code2 size={20} />,
     color: "#00AD57",
+    image: "/images/sagar-gujarathi.webp",
     linkedin: "https://linkedin.com/in/sagargujarathi",
     github: "https://github.com/sagargujarathi",
   },
@@ -80,7 +75,8 @@ const TEAM_MEMBERS = [
       "XBee RF link design, data framing protocol, ground-to-cansat telemetry transmission",
     icon: <Radio size={20} />,
     color: "#3B82F6",
-    linkedin: "https://www.linkedin.com/in/bala-praneeth-sagar-yarneni-3a208a247/",
+    linkedin:
+      "https://www.linkedin.com/in/bala-praneeth-sagar-yarneni-3a208a247/",
     github: null,
   },
 ];
@@ -100,29 +96,6 @@ const TECH_STACK = [
   { label: "Zod", icon: <Layers size={12} /> },
 ];
 
-// ── Sub-components ───────────────────────────────────────────────────────────
-
-const StatBadge = ({
-  label,
-  value,
-  accent = false,
-}: {
-  label: string;
-  value: string | number;
-  accent?: boolean;
-}) => (
-  <div className="border border-black bg-white px-4 py-3 text-center min-w-[100px]">
-    <div
-      className={`text-[18px] font-black ${accent ? "text-[#00AD57]" : "text-black"}`}
-    >
-      {value}
-    </div>
-    <div className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">
-      {label}
-    </div>
-  </div>
-);
-
 const TeamCard = ({
   name,
   role,
@@ -130,16 +103,21 @@ const TeamCard = ({
   description,
   icon,
   color,
+  image,
   linkedin,
   github,
-}: (typeof TEAM_MEMBERS)[number]) => (
+}: (typeof TEAM_MEMBERS)[number] & { image?: string }) => (
   <div className="border border-black bg-white flex flex-col">
     <div
       className="flex items-center gap-3 px-4 py-3 text-white"
       style={{ backgroundColor: color }}
     >
-      <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-[11px] font-black">
-        {initials}
+      <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-[11px] font-black overflow-hidden border-2 border-white/20 shrink-0">
+        {image ? (
+          <img src={image} alt={name} className="w-full h-full object-cover" />
+        ) : (
+          initials
+        )}
       </div>
       <div>
         <div className="text-[12px] font-black leading-tight">{name}</div>
@@ -191,18 +169,6 @@ const TechPill = ({
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 const InfoPage = () => {
-  const stats = useXBeeStore((s) => s.statistics);
-  const latestTelemetry = useXBeeStore(
-    (s) => s.telemetry.history[0] ?? null
-  );
-  const simMode = useSimulationStore((s) => s.mode);
-  const simRunning = useSimulationStore((s) => s.isRunning);
-  const simElapsed = useSimulationStore((s) => s.elapsedSeconds);
-  const simStart = useSimulationStore((s) => s.start);
-  const simStop = useSimulationStore((s) => s.stop);
-  const simReset = useSimulationStore((s) => s.reset);
-  const setSimMode = useSimulationStore((s) => s.setMode);
-
   const [downloadState, setDownloadState] = useState<
     "idle" | "loading" | "saved"
   >("idle");
@@ -225,23 +191,22 @@ const InfoPage = () => {
           setDownloadState("idle");
           return;
         }
-        // not-found: installer hasn't been built yet — fall through to web download
+        // not-found: installer hasn't been built yet
+        alert(
+          "Installer not found.\nRun `npm run build:electron` first to generate CanSat-Setup.exe.",
+        );
       } catch {
-        // Electron IPC failed — fall through to web download
+        alert(
+          "Failed to open save dialog. Please run `npm run build:electron` to generate the installer.",
+        );
       }
       setDownloadState("idle");
+      return;
     }
 
-    // Web / non-Electron fallback: navigate to GitHub releases
-    openExternal(RELEASE_URL);
+    // Fallback for web/non-Electron context
+    alert("Run this app inside Electron to download the installer.");
   };
-
-  const flightStateName =
-    typeof latestTelemetry?.FLIGHT_STATE === "number"
-      ? FLIGHT_STATES[
-          latestTelemetry.FLIGHT_STATE as keyof typeof FLIGHT_STATES
-        ] ?? "UNKNOWN"
-      : "STANDBY";
 
   return (
     <div className="h-full overflow-y-auto bg-gray-50 font-roboto-mono">
@@ -265,9 +230,9 @@ const InfoPage = () => {
             </div>
             <p className="text-[11px] text-gray-400 leading-relaxed max-w-[480px]">
               Real-time ground station for a student-built CanSat payload
-              competing in the national IN-Space / ISRO challenge. Handles
-              live telemetry, command uplink, GPS tracking, and AI-assisted
-              mission analysis.
+              competing in the national IN-Space / ISRO challenge. Handles live
+              telemetry, command uplink, GPS tracking, and AI-assisted mission
+              analysis.
             </p>
           </div>
 
@@ -278,158 +243,11 @@ const InfoPage = () => {
             <div className="text-[24px] font-black text-[#00AD57] leading-none">
               v1.0.0
             </div>
-            <div className="flex items-center gap-1.5 mt-1">
-              <div
-                className={`w-2 h-2 rounded-full ${simRunning ? "bg-[#00AD57] animate-pulse" : "bg-gray-500"}`}
-              />
-              <span className="text-[9px] font-bold uppercase tracking-widest text-gray-300">
-                {simMode === "gui"
-                  ? simRunning
-                    ? "GUI SIM RUNNING"
-                    : "GUI SIM PAUSED"
-                  : "HARDWARE MODE"}
-              </span>
-            </div>
           </div>
         </div>
       </div>
 
       <div className="p-6 space-y-6">
-        {/* ── Live Stats ──────────────────────────────────────────────────── */}
-        <div>
-          <div className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-2">
-            Live Mission Telemetry
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <StatBadge
-              label="Packets Rx"
-              value={stats.packetsReceived}
-              accent
-            />
-            <StatBadge label="Flight State" value={flightStateName} />
-            <StatBadge
-              label="Altitude"
-              value={
-                latestTelemetry
-                  ? `${latestTelemetry.ALTITUDE.toFixed(0)} m`
-                  : "— m"
-              }
-              accent
-            />
-            <StatBadge
-              label="Temperature"
-              value={
-                latestTelemetry
-                  ? `${latestTelemetry.TEMPERATURE.toFixed(1)} °C`
-                  : "— °C"
-              }
-            />
-            <StatBadge
-              label="Voltage"
-              value={
-                latestTelemetry
-                  ? `${latestTelemetry.VOLTAGE.toFixed(2)} V`
-                  : "— V"
-              }
-              accent
-            />
-            <StatBadge
-              label="RSSI"
-              value={
-                latestTelemetry ? `${latestTelemetry.RSSI_DBM} dBm` : "—"
-              }
-            />
-          </div>
-        </div>
-
-        {/* ── Simulation Control ──────────────────────────────────────────── */}
-        <div className="border border-black bg-white">
-          <div className="px-4 py-2 border-b border-black bg-black text-white flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Activity size={13} className="text-[#00AD57]" />
-              <span className="text-[11px] font-black tracking-wider">
-                SIMULATION MODE
-              </span>
-            </div>
-            <span
-              className={`text-[9px] font-bold px-2 py-0.5 ${
-                simMode === "gui"
-                  ? "bg-[#FFAB00] text-black"
-                  : "bg-[#00AD57] text-white"
-              }`}
-            >
-              {simMode === "gui" ? "GUI DATA" : "CANSAT HARDWARE"}
-            </span>
-          </div>
-
-          <div className="px-4 py-3 space-y-3">
-            {/* Mode toggle */}
-            <div className="flex gap-2">
-              <button
-                onClick={() => setSimMode("gui")}
-                className={`flex-1 py-2 text-[10px] font-black tracking-wider border border-black transition-colors ${
-                  simMode === "gui"
-                    ? "bg-[#FFAB00] text-black"
-                    : "bg-white text-black hover:bg-gray-100"
-                }`}
-              >
-                GUI SIMULATION
-              </button>
-              <button
-                onClick={() => setSimMode("cansat")}
-                className={`flex-1 py-2 text-[10px] font-black tracking-wider border border-black transition-colors ${
-                  simMode === "cansat"
-                    ? "bg-[#00AD57] text-white"
-                    : "bg-white text-black hover:bg-gray-100"
-                }`}
-              >
-                CANSAT HARDWARE
-              </button>
-            </div>
-
-            {/* Sim controls */}
-            {simMode === "gui" && (
-              <div className="flex items-center gap-3">
-                <div className="flex gap-1">
-                  <button
-                    onClick={simStart}
-                    disabled={simRunning}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold border border-black bg-[#00AD57] text-white disabled:opacity-40 hover:opacity-90"
-                  >
-                    <Play size={11} />
-                    START
-                  </button>
-                  <button
-                    onClick={simStop}
-                    disabled={!simRunning}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold border border-black bg-gray-800 text-white disabled:opacity-40 hover:opacity-90"
-                  >
-                    <Square size={11} />
-                    STOP
-                  </button>
-                  <button
-                    onClick={simReset}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold border border-black bg-white hover:bg-gray-100"
-                  >
-                    <RotateCcw size={11} />
-                    RESET
-                  </button>
-                </div>
-                <div className="text-[10px] font-mono text-gray-600">
-                  T+{simElapsed.toFixed(1)}s
-                </div>
-              </div>
-            )}
-
-            {simMode === "cansat" && (
-              <p className="text-[10px] text-gray-500">
-                Connect your XBee hardware via the Settings page to receive
-                live data.
-              </p>
-            )}
-          </div>
-        </div>
-
         {/* ── Team Members ────────────────────────────────────────────────── */}
         <div>
           <div className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-2">
@@ -486,12 +304,16 @@ const InfoPage = () => {
         <div className="border border-black bg-white">
           <div className="px-4 py-2 border-b border-black bg-[#D9D9D9] flex items-center gap-2">
             <Code2 size={12} />
-            <span className="text-[11px] font-black tracking-wider">BUILT BY</span>
+            <span className="text-[11px] font-black tracking-wider">
+              BUILT BY
+            </span>
           </div>
           <div className="px-4 py-3 flex items-center justify-between flex-wrap gap-3">
             <div>
               <div className="text-[13px] font-black">Sagar Gujarathi</div>
-              <div className="text-[10px] text-gray-500">Software Lead · Team Tejas</div>
+              <div className="text-[10px] text-gray-500">
+                Software Lead · Team Tejas
+              </div>
             </div>
             <div className="flex gap-2">
               <button
@@ -548,9 +370,7 @@ const InfoPage = () => {
               ) : (
                 <Download size={15} />
               )}
-              {downloadState === "saved"
-                ? "Saved!"
-                : "Download .exe (Windows)"}
+              {downloadState === "saved" ? "Saved!" : "Download .exe (Windows)"}
               {downloadState === "idle" && (
                 <ExternalLink size={10} className="opacity-60" />
               )}
@@ -572,4 +392,3 @@ const InfoPage = () => {
 };
 
 export default InfoPage;
-

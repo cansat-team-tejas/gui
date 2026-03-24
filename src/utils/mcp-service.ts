@@ -1,5 +1,5 @@
 export interface MCPCreateDatabaseRequest {
-  db_path: string; // e.g. "mission_001.db" (will be created under databases/)
+  db_path: string;
 }
 
 export interface MCPCreateDatabaseResponse {
@@ -64,6 +64,11 @@ export interface MCPAskResponse {
     content: string;
   };
   command?: string;
+  sql?: string;
+  details?: {
+    row_count: number;
+    [key: string]: any;
+  };
 }
 
 export interface MCPCurrentDatabaseResponse {
@@ -71,93 +76,55 @@ export interface MCPCurrentDatabaseResponse {
   read_only?: boolean;
 }
 
-/**
- * MCPService handles communication with the Mission Control Platform backend.
- * It provides methods for database management, telemetry retrieval, and AI-assisted analysis.
- */
 export class MCPService {
   private baseUrl: string;
 
-  /**
-   * @param urlOrPort - Full base URL or port number (assumes localhost) for the backend service.
-   */
   constructor(urlOrPort?: string | number) {
-    const envUrl = (import.meta as any).env.VITE_API_URL;
+    const envUrl = import.meta.env.VITE_API_URL as string | undefined;
     const finalVal = urlOrPort ?? envUrl ?? 8000;
 
     if (typeof finalVal === "number") {
       this.baseUrl = `http://localhost:${finalVal}`;
+    } else if (!isNaN(Number(finalVal)) && finalVal.trim() !== "") {
+      this.baseUrl = `http://localhost:${finalVal}`;
     } else {
-      // If it's a string, check if it's just a number string (port)
-      if (!isNaN(Number(finalVal)) && finalVal.trim() !== "") {
-        this.baseUrl = `http://localhost:${finalVal}`;
-      } else {
-        this.baseUrl = finalVal;
-      }
+      this.baseUrl = finalVal;
     }
   }
 
-  /**
-   * Create a new SQLite database and set it as the active DB
-   */
   async createDatabase(dbPath: string): Promise<MCPCreateDatabaseResponse> {
     const response = await fetch(`${this.baseUrl}/database/create`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        db_path: dbPath,
-      } satisfies MCPCreateDatabaseRequest),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ db_path: dbPath } satisfies MCPCreateDatabaseRequest),
     });
 
     if (!response.ok) {
-      throw new Error(
-        `Failed to create database: ${response.status} ${response.statusText}`
-      );
+      throw new Error(`Failed to create database: ${response.status} ${response.statusText}`);
     }
-
     return response.json();
   }
 
-  /**
-   * Pushes a new telemetry record to the active database.
-   * @param data - The telemetry record to insert (typically matches the 35-field format)
-   */
-  async pushTelemetry(
-    data: MCPInsertDataRequest
-  ): Promise<MCPInsertDataResponse> {
+  async pushTelemetry(data: MCPInsertDataRequest): Promise<MCPInsertDataResponse> {
     const response = await fetch(`${this.baseUrl}/telemetry/push`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      throw new Error(
-        `Failed to insert data: ${response.status} ${response.statusText}`
-      );
+      throw new Error(`Failed to insert data: ${response.status} ${response.statusText}`);
     }
-
     return response.json();
   }
 
-  /**
-   * Sends a natural language question about the mission to the AI service.
-   * @param question - The user's query
-   * @param currentRow - Optional point-in-time telemetry row for context
-   */
   async askQuestion(
     question: string,
     currentRow?: Record<string, unknown>
   ): Promise<MCPAskResponse> {
     const response = await fetch(`${this.baseUrl}/ask`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         question,
         ...(currentRow ? { current_row: currentRow } : {}),
@@ -165,50 +132,27 @@ export class MCPService {
     });
 
     if (!response.ok) {
-      throw new Error(
-        `Failed to ask question: ${response.status} ${response.statusText}`
-      );
+      throw new Error(`Failed to ask question: ${response.status} ${response.statusText}`);
     }
-
     return response.json();
   }
 
-  /**
-   * Get the current active database path
-   */
   async getCurrentDatabase(): Promise<MCPCurrentDatabaseResponse> {
-    const response = await fetch(`${this.baseUrl}/database/current`, {
-      method: "GET",
-    });
+    const response = await fetch(`${this.baseUrl}/database/current`);
     if (!response.ok) {
-      throw new Error(
-        `Failed to get current database: ${response.status} ${response.statusText}`
-      );
+      throw new Error(`Failed to get current database: ${response.status} ${response.statusText}`);
     }
     return response.json();
   }
 
-  /**
-   * Get all telemetry rows from the active database
-   */
-  /**
-   * Retrieves full telemetry history from the current database.
-   */
   async getTelemetry(): Promise<any[]> {
-    const response = await fetch(`${this.baseUrl}/telemetry`, {
-      method: "GET",
-    });
+    const response = await fetch(`${this.baseUrl}/telemetry`);
     if (!response.ok) {
-      throw new Error(
-        `Failed to fetch telemetry: ${response.status} ${response.statusText}`
-      );
+      throw new Error(`Failed to fetch telemetry: ${response.status} ${response.statusText}`);
     }
     return response.json();
   }
 
-  /**
-   * Execute a read-only SQL query against the active database
-   */
   async query(sql: string): Promise<{ result: any[] }> {
     const response = await fetch(`${this.baseUrl}/query`, {
       method: "POST",
@@ -216,24 +160,18 @@ export class MCPService {
       body: JSON.stringify({ sql }),
     });
     if (!response.ok) {
-      throw new Error(
-        `Failed to execute query: ${response.status} ${response.statusText}`
-      );
+      throw new Error(`Failed to execute query: ${response.status} ${response.statusText}`);
     }
     return response.json();
   }
 
-
-
-  // Generate a unique filename based on current timestamp
   static generateFilename(teamId: string = "TEJAS"): string {
     const now = new Date();
-    const timestamp = now.toISOString().replace(/[:.]/g, "-").slice(0, -5); // Remove milliseconds and colons
+    const timestamp = now.toISOString().replace(/[:.]/g, "-").slice(0, -5);
     return `mission_${teamId}_${timestamp}.db`;
   }
 }
 
-// Export convenience functions
 export const createMCPService = (urlOrPort?: string | number) =>
   new MCPService(urlOrPort);
 

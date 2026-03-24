@@ -4,6 +4,8 @@
  */
 import React from "react";
 
+import { AlertTriangle } from "lucide-react";
+
 interface ResetControlProps {
   showResetConfirm: boolean;
   onResetRequest: () => void;
@@ -34,10 +36,10 @@ const ResetControl: React.FC<ResetControlProps> = ({
         {showResetConfirm && (
           <button
             onClick={onResetConfirm}
-            className="bg-red-700 border border-red-900 rounded-[2px] px-2 py-[6px] h-[32px] w-[131px] text-[13px] font-medium text-white hover:bg-red-800 transition-colors animate-pulse"
+            className="bg-red-700 border border-red-900 rounded-[2px] px-2 py-[6px] h-[32px] flex items-center justify-center gap-1.5 w-[131px] text-[13px] font-medium text-white hover:bg-red-800 transition-colors animate-pulse"
             title="RESET_CONFIRM"
           >
-            ⚠️ CONFIRM
+            <AlertTriangle size={14} /> CONFIRM
           </button>
         )}
       </div>

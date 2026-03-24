@@ -1,4 +1,4 @@
-import { useAIChatStore } from "../../../store/aiChat";
+import { useAIChatStore } from "../../../store/ai-chat";
 import type { ChatMessage } from "../types";
 
 export const useChatMessages = () => {

@@ -3,6 +3,7 @@
  * Displays categorized command buttons
  */
 import React from "react";
+import { AlertTriangle } from "lucide-react";
 import type { Command } from "../types";
 
 interface CommandCategoryProps {
@@ -38,8 +39,8 @@ const CommandCategory: React.FC<CommandCategoryProps> = ({
 
   return (
     <div className="space-y-1">
-      <div className={`text-[9px] font-bold ${getTitleStyles()}`}>
-        {type === "emergency" && "⚠️ "}
+      <div className={`text-[9px] font-bold flex items-center gap-1 ${getTitleStyles()}`}>
+        {type === "emergency" && <AlertTriangle size={10} />}
         {title}
       </div>
       <div className="flex flex-wrap gap-2">

@@ -15,7 +15,6 @@ export class FrameParser {
     const timestamp = new Date();
     const trimmedData = frameData.trim();
 
-    // Handle standalone command echoes (CMD_ECHO:...)
     if (trimmedData.startsWith("CMD_ECHO:")) {
       return {
         type: FRAME_TYPES.COMMAND_ECHO,
@@ -25,7 +24,6 @@ export class FrameParser {
       };
     }
 
-    // Handle standalone log entries (LOG:...)
     if (trimmedData.startsWith("LOG:")) {
       return {
         type: FRAME_TYPES.LOG_ENTRY,
@@ -35,7 +33,7 @@ export class FrameParser {
       };
     }
 
-    // Handle standalone commands (START, CAL_SENSORS, etc.)
+    // Short non-CSV strings are standalone commands (e.g. START, CAL_SENSORS)
     if (!trimmedData.includes(",") && trimmedData.length < 50) {
       return {
         type: FRAME_TYPES.COMMAND_ECHO,
@@ -50,7 +48,6 @@ export class FrameParser {
       };
     }
 
-    // Handle telemetry data (CSV format)
     return {
       type: FRAME_TYPES.TELEMETRY,
       timestamp,
@@ -59,88 +56,66 @@ export class FrameParser {
     };
   }
 
+  /**
+   * Parses a 35-field CSV string matching the firmware's sprintf telemetry format
+   * into a structured TelemetryData object.
+   */
   private static parseTelemetryData(csvData: string): TelemetryData | null {
     try {
-      // Remove any trailing array-like payloads (e.g., log events appended)
       const cleanCsv = csvData.split(",[")[0];
       const fields = cleanCsv.split(",");
 
       if (fields.length < this.CSV_FIELD_COUNT) {
         console.warn(
-          `Incomplete telemetry data: expected ${this.CSV_FIELD_COUNT} fields, got ${fields.length}`
+          `Incomplete telemetry: expected ${this.CSV_FIELD_COUNT} fields, got ${fields.length}`
         );
       }
 
-      const parseFloat = (value: string, fallback: number = 0): number => {
+      const num = (value: string, fallback: number = 0): number => {
         const parsed = Number(value);
         return isNaN(parsed) ? fallback : parsed;
       };
 
-      const parseString = (value: string, fallback: string = ""): string => {
-        return value ? value.trim() : fallback;
-      };
+      const str = (value: string, fallback: string = ""): string =>
+        value ? value.trim() : fallback;
 
-      // Map fields exactly to the 35-field firmware CSV format
-      const TELEMETRY_DATA: TelemetryData = {
-        // Header and counters
-        TEAM_ID: parseString(fields[0], "046"), // %s
-        MISSION_TIME_S: parseFloat(fields[1]), // %.1f
-        PACKET_COUNT: parseFloat(fields[2]), // %u
-
-        // Environmental
-        ALTITUDE: parseFloat(fields[3]), // %.1f
-        PRESSURE: parseFloat(fields[4]), // %.0f
-        TEMPERATURE: parseFloat(fields[5]), // %.1f
-        VOLTAGE: parseFloat(fields[6]), // %.2f
-
-        // GNSS
-        GNSS_TIME: parseString(fields[7]), // %s
-        LATITUDE: parseFloat(fields[8]), // %.6f
-        LONGITUDE: parseFloat(fields[9]), // %.6f
-        GPS_ALTITUDE: parseFloat(fields[10]), // %.1f
-        SATELLITES: parseFloat(fields[11]), // %d
-
-        // IMU: accel
-        ACCEL_X: parseFloat(fields[12]), // %.2f
-        ACCEL_Y: parseFloat(fields[13]), // %.2f
-        ACCEL_Z: parseFloat(fields[14]), // %.2f
-
-        // Spin/flight
-        GYRO_SPIN_RATE: parseFloat(fields[15]), // %.2f
-        FLIGHT_STATE: parseFloat(fields[16]), // %d
-
-        // IMU: gyro
-        GYRO_X: parseFloat(fields[17]), // %.2f
-        GYRO_Y: parseFloat(fields[18]), // %.2f
-        GYRO_Z: parseFloat(fields[19]), // %.2f
-
-        // Orientation
-        ROLL: parseFloat(fields[20]), // %.1f
-        PITCH: parseFloat(fields[21]), // %.1f
-        YAW: parseFloat(fields[22]), // %.1f
-
-        // Magnetometer
-        MAG_X: parseFloat(fields[23]), // %.1f
-        MAG_Y: parseFloat(fields[24]), // %.1f
-        MAG_Z: parseFloat(fields[25]), // %.1f
-
-        // Env/power
-        HUMIDITY: parseFloat(fields[26]), // %.2f
-        CURRENT: parseFloat(fields[27]), // %.2f
-        POWER: parseFloat(fields[28]), // %.1f
-        BARO_ALTITUDE: parseFloat(fields[29]), // %.1f
-        MCU_TEMP_C: parseFloat(fields[30]), // %.1f
-
-        // Radio/time
-        RSSI_DBM: parseFloat(fields[31]), // %d
-        RTC_EPOCH: parseFloat(fields[32]), // %lu
-
-        // Strings
-        CMD_ECHO: parseString(fields[33] || ""), // %s
-        LOG_DATA: parseString(fields[34] || ""), // %s
+      return {
+        TEAM_ID: str(fields[0], "046"),
+        MISSION_TIME_S: num(fields[1]),
+        PACKET_COUNT: num(fields[2]),
+        ALTITUDE: num(fields[3]),
+        PRESSURE: num(fields[4]),
+        TEMPERATURE: num(fields[5]),
+        VOLTAGE: num(fields[6]),
+        GNSS_TIME: str(fields[7]),
+        LATITUDE: num(fields[8]),
+        LONGITUDE: num(fields[9]),
+        GPS_ALTITUDE: num(fields[10]),
+        SATELLITES: num(fields[11]),
+        ACCEL_X: num(fields[12]),
+        ACCEL_Y: num(fields[13]),
+        ACCEL_Z: num(fields[14]),
+        GYRO_SPIN_RATE: num(fields[15]),
+        FLIGHT_STATE: num(fields[16]),
+        GYRO_X: num(fields[17]),
+        GYRO_Y: num(fields[18]),
+        GYRO_Z: num(fields[19]),
+        ROLL: num(fields[20]),
+        PITCH: num(fields[21]),
+        YAW: num(fields[22]),
+        MAG_X: num(fields[23]),
+        MAG_Y: num(fields[24]),
+        MAG_Z: num(fields[25]),
+        HUMIDITY: num(fields[26]),
+        CURRENT: num(fields[27]),
+        POWER: num(fields[28]),
+        BARO_ALTITUDE: num(fields[29]),
+        MCU_TEMP_C: num(fields[30]),
+        RSSI_DBM: num(fields[31]),
+        RTC_EPOCH: num(fields[32]),
+        CMD_ECHO: str(fields[33] || ""),
+        LOG_DATA: str(fields[34] || ""),
       } as TelemetryData;
-
-      return TELEMETRY_DATA;
     } catch (error) {
       console.error("Failed to parse telemetry data:", error, csvData);
       return null;
@@ -159,32 +134,23 @@ export class FrameParser {
     }
 
     const [, command, response] = match;
-
     return {
-      TEAM_ID: "046", // Default team ID
-      MISSION_TIME: "", // Will be filled from context if available
+      TEAM_ID: "046",
+      MISSION_TIME: "",
       COMMAND_ECHO: `${command}:${response}`,
       timestamp: new Date(),
     };
   }
 
-  /**
-   * Parse log entries with timestamps
-   */
   private static parseLogEntry(data: string): LogEntry {
-    const events: Array<{ time: number; symbol: string }> = [];
     let match;
-
     while ((match = this.LOG_PATTERN.exec(data)) !== null) {
-      events.push({
-        time: parseInt(match[1]),
-        symbol: match[2].trim(),
-      });
+      // Pattern consumed — side-effect advances regex lastIndex
     }
 
     return {
-      TEAM_ID: "046", // Default team ID
-      MISSION_TIME: "", // Will be filled from context if available
+      TEAM_ID: "046",
+      MISSION_TIME: "",
       MESSAGE: data.replace("LOG:", ""),
       timestamp: new Date(),
     };

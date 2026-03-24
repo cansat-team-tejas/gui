@@ -12,6 +12,7 @@ import { OrbitControls, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { useTelemetryLatest } from "../../../hooks/use-xbee";
 import AttitudeChart from "./attitude-chart";
+import { BarChart, Target } from "lucide-react";
 
 // Define the props interface
 interface ModelViewerProps {
@@ -193,12 +194,12 @@ const ModelViewer = () => {
             </div>
             <button
               onClick={() => setViewMode(viewMode === "3d" ? "chart" : "3d")}
-              className="ml-2 px-2 py-0.5 bg-white border border-black text-[9px] font-bold hover:bg-gray-100 transition-colors"
+              className="ml-2 px-2 py-0.5 bg-white border border-black text-black hover:bg-gray-100 transition-colors flex items-center justify-center"
               title={`Switch to ${
                 viewMode === "3d" ? "chart" : "3D model"
               } view`}
             >
-              {viewMode === "3d" ? "📊" : "🎯"}
+              {viewMode === "3d" ? <BarChart size={12} /> : <Target size={12} />}
             </button>
           </div>
         </div>

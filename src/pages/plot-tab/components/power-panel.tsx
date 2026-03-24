@@ -8,10 +8,11 @@ const PowerPanel = () => {
   const current = latest?.CURRENT ?? 0;
   const power = latest?.POWER ?? 0;
 
-  // Calculate battery percentage (assuming 3.7V nominal, 3.0V min, 4.2V max)
+  // Calculate battery percentage for 2S LiPo (7.4V nominal, 6.6V min, 8.4V max)
   const getBatteryPercentage = (v: number): number => {
-    const minVoltage = 3.0;
-    const maxVoltage = 4.2;
+    if (v === 0) return 0; // Handle completely disconnected/dead state
+    const minVoltage = 6.6;
+    const maxVoltage = 8.4;
     const percentage = ((v - minVoltage) / (maxVoltage - minVoltage)) * 100;
     return Math.max(0, Math.min(100, percentage));
   };

@@ -8,7 +8,7 @@ interface AIChatState {
   isProcessing: boolean;
   addMessage: (message: Omit<ChatMessage, "id">) => void;
   addUserMessage: (content: string) => void;
-  addAIMessage: (content: string, commandExecuted?: string) => void;
+  addAIMessage: (content: string, commandExecuted?: string, sql?: string, rowCount?: number) => void;
   addErrorMessage: (error?: string) => void;
   setIsProcessing: (value: boolean) => void;
   clear: () => void;
@@ -29,12 +29,14 @@ export const useAIChatStore = create<AIChatState>()(
       addUserMessage: (content) => {
         get().addMessage({ role: "user", content, timestamp: new Date() });
       },
-      addAIMessage: (content, commandExecuted) => {
+      addAIMessage: (content, commandExecuted, sql, rowCount) => {
         get().addMessage({
           role: "ai",
           content,
           timestamp: new Date(),
           commandExecuted,
+          sql,
+          rowCount,
         });
       },
       addErrorMessage: (

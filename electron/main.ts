@@ -410,7 +410,7 @@ app.on("web-contents-created", (event, contents) => {
   contents.setWindowOpenHandler(() => ({ action: "deny" }));
   contents.on("will-navigate", (event, navigationUrl) => {
     const allowed = new URL(navigationUrl).origin;
-    if (allowed !== "http://localhost:5178" && allowed !== "file://") {
+    if (allowed !== "http://localhost:5173" && allowed !== "file://") {
       event.preventDefault();
     }
   });

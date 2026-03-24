@@ -1,7 +1,8 @@
-import { TableColumn, ICanSatTelemetryData } from "../data/csv-data";
+import type { ITelemetryType } from "../types/telemetry";
+import type { TableColumn } from "../data/csv-data";
 
 export function exportToCsv(
-  data: ICanSatTelemetryData[],
+  data: ITelemetryType[],
   columns: TableColumn[],
   filename: string = "data.csv"
 ): void {

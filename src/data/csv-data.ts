@@ -2,13 +2,11 @@ import type { ITelemetryType } from "../types/telemetry";
 import { getFlightStateName } from "../constants";
 
 export { getFlightStateName };
-
-// Re-export the canonical telemetry type so existing imports still work
 export type ICanSatTelemetryData = ITelemetryType;
 
 export interface TableColumn {
   header: string;
-  accessor: keyof ICanSatTelemetryData;
+  accessor: keyof ITelemetryType;
 }
 
 export const columns: TableColumn[] = [

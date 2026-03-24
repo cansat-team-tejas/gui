@@ -1,48 +1,44 @@
 import type { FrameType } from "../constants";
 
-// Matches the 35-field C++ firmware telemetry CSV format
 export interface ITelemetryType {
-  // 29 fields total based on C++ sprintf format
-  TEAM_ID: string; // %s - team ID
-  MISSION_TIME_S: number; // %.1f - mission time in seconds
-  PACKET_COUNT: number; // %u - packet count
-  ALTITUDE: number; // %.1f - barometric altitude
-  PRESSURE: number; // %.0f - pressure
-  TEMPERATURE: number; // %.1f - temperature
-  VOLTAGE: number; // %.2f - voltage
-  GNSS_TIME: string; // %s - GNSS time string
-  LATITUDE: number; // %.6f - latitude
-  LONGITUDE: number; // %.6f - longitude
-  GPS_ALTITUDE: number; // %.1f - GPS altitude
-  SATELLITES: number; // %d - satellite count
-  ACCEL_X: number; // %.2f - acceleration X
-  ACCEL_Y: number; // %.2f - acceleration Y
-  ACCEL_Z: number; // %.2f - acceleration Z
-  GYRO_SPIN_RATE: number; // %.2f - gyroscope spin rate
-  FLIGHT_STATE: number; // %d - flight state
-  GYRO_X: number; // %.2f - gyroscope X
-  GYRO_Y: number; // %.2f - gyroscope Y
-  GYRO_Z: number; // %.2f - gyroscope Z
-  ROLL: number; // %.1f - roll angle
-  PITCH: number; // %.1f - pitch angle
-  YAW: number; // %.1f - yaw angle
-  MAG_X: number; // %.1f - magnetometer X
-  MAG_Y: number; // %.1f - magnetometer Y
-  MAG_Z: number; // %.1f - magnetometer Z
-  HUMIDITY: number; // %.2f - humidity
-  CURRENT: number; // %.2f - current
-  POWER: number; // %.1f - power
-  BARO_ALTITUDE: number; // %.1f - barometric altitude (duplicate)
-  MCU_TEMP_C: number; // %.1f - MCU temperature
-  RSSI_DBM: number; // %d - RSSI in dBm
-  RTC_EPOCH: number; // %lu - RTC epoch timestamp
-  CMD_ECHO: string; // %s - command echo
-  LOG_DATA: string; // %s - log data codes
-
-  [key: string]: any; // Allow additional properties
+  TEAM_ID: string;
+  MISSION_TIME_S: number;
+  PACKET_COUNT: number;
+  ALTITUDE: number;
+  PRESSURE: number;
+  TEMPERATURE: number;
+  VOLTAGE: number;
+  GNSS_TIME: string;
+  LATITUDE: number;
+  LONGITUDE: number;
+  GPS_ALTITUDE: number;
+  SATELLITES: number;
+  ACCEL_X: number;
+  ACCEL_Y: number;
+  ACCEL_Z: number;
+  GYRO_SPIN_RATE: number;
+  FLIGHT_STATE: number;
+  GYRO_X: number;
+  GYRO_Y: number;
+  GYRO_Z: number;
+  ROLL: number;
+  PITCH: number;
+  YAW: number;
+  MAG_X: number;
+  MAG_Y: number;
+  MAG_Z: number;
+  HUMIDITY: number;
+  CURRENT: number;
+  POWER: number;
+  BARO_ALTITUDE: number;
+  MCU_TEMP_C: number;
+  RSSI_DBM: number;
+  RTC_EPOCH: number;
+  CMD_ECHO: string;
+  LOG_DATA: string;
+  [key: string]: any;
 }
 
-// Basic command echo interface
 export interface ICommandType {
   TEAM_ID: string;
   MISSION_TIME: string;
@@ -50,7 +46,6 @@ export interface ICommandType {
   timestamp: Date;
 }
 
-// Basic log entry interface
 export interface ILogEntryType {
   TEAM_ID: string;
   MISSION_TIME: string;
@@ -58,24 +53,10 @@ export interface ILogEntryType {
   timestamp: Date;
 }
 
-// Export aliases for compatibility
-export type TelemetryData = ITelemetryType;
-export type CommandEcho = ICommandType;
-export type LogEntry = ILogEntryType;
-
+// Frame processing type
 export interface ParsedFrame {
   type: FrameType;
   timestamp: Date;
   data: any;
   raw: string;
-}
-
-export interface TelemetryState {
-  latest: ITelemetryType;
-  history: ITelemetryType[];
-  lastUpdate: Date | null;
-  packetsReceived: number;
-  dataRate: number; // packets per second
-  missionStartTime: Date | null;
-  totalMissionTime: number; // in seconds
 }

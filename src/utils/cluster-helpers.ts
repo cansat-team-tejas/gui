@@ -1,12 +1,5 @@
-/**
- * XBee Explicit Frame Cluster ID Helpers
- * Utilities for filtering and processing frames by cluster ID
- */
 import { CLUSTER_IDS } from "../constants";
 
-/**
- * Get packet type name from cluster ID
- */
 export const getPacketTypeFromClusterId = (
   clusterId: number
 ): "TELEMETRY" | "LOG" | "CMD_RESPONSE" | "UNKNOWN" => {
@@ -22,9 +15,6 @@ export const getPacketTypeFromClusterId = (
   }
 };
 
-/**
- * Get cluster name for logging
- */
 export const getClusterName = (clusterId: number): string => {
   const type = getPacketTypeFromClusterId(clusterId);
   return type === "UNKNOWN"

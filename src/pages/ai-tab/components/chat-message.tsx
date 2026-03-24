@@ -66,7 +66,20 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = memo(({ message }) => {
         <div className="text-[12px] leading-relaxed whitespace-pre-wrap font-medium">
           {parseAndHighlight(message.content)}
         </div>
-        <div className="flex items-center justify-between mt-2 gap-2">
+
+        {message.sql && (
+          <div className="mt-3 bg-gray-50 border-l-2 border-[#00AD57] p-2 font-mono text-[9px]">
+            <div className="text-gray-400 mb-1 flex items-center justify-between">
+              <span>DATABASE QUERY [SQL]</span>
+              {message.rowCount !== undefined && (
+                <span>{message.rowCount} ROWS RETURNED</span>
+              )}
+            </div>
+            <div className="text-[#00AD57] break-all">{message.sql}</div>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between mt-2 gap-2 border-t border-gray-100 pt-1">
           <div
             className={`text-[9px] font-bold ${
               message.role === "user" ? "text-green-100" : "text-gray-500"
@@ -75,7 +88,7 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = memo(({ message }) => {
             {formatTime(message.timestamp)}
           </div>
           {message.commandExecuted && (
-            <div className="bg-[#FFAB00] text-black px-2 py-1 text-[8px] font-bold border border-black">
+            <div className="bg-[#FFAB00] text-black px-2 py-0.5 text-[8px] font-black border border-black uppercase tracking-tighter shadow-[1px_1px_0px_#000]">
               CMD: {message.commandExecuted}
             </div>
           )}

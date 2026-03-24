@@ -3,7 +3,18 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import SearchForm from "./csv-search-form";
 import CsvDataTable from "../../components/csv-data-table";
 import DataStatusDisplay from "../../components/data-status-display";
-import { csvSearchSchema, type CsvSearchFormData } from "../../schemas/forms";
+import { z } from "zod";
+
+export const csvSearchSchema = z.object({
+  searchTerm: z.string().optional(),
+  searchColumn: z.string().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  missionTimeStart: z.string().optional(),
+  missionTimeEnd: z.string().optional(),
+});
+
+export type CsvSearchFormData = z.infer<typeof csvSearchSchema>;
 
 const CSVTab = () => {
   const methods = useForm<CsvSearchFormData>({

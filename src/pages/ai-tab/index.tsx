@@ -5,7 +5,7 @@ import { useMissionContext } from "./hooks/use-mission-context";
 import { useAIService } from "./hooks/use-ai-service";
 import { useChatMessages } from "./hooks/use-chat-messages";
 import Button from "../../components/button";
-import { useAIChatStore } from "../../store/aiChat";
+import { useAIChatStore } from "../../store/ai-chat";
 import ConfirmationDialog from "../../components/confirmation-dialog";
 import { useSettingsState, useCommandManagement } from "../settings/hooks";
 
@@ -33,11 +33,11 @@ const AITab: React.FC = () => {
       setIsProcessing(true);
 
       try {
-        const { response, commandExecuted } = await processAIResponse(
+        const { response, commandExecuted, sql, rowCount } = await processAIResponse(
           message,
           missionContext
         );
-        addAIMessage(response, commandExecuted);
+        addAIMessage(response, commandExecuted, sql, rowCount);
         if (!commandExecuted) return;
 
         settingsState.setConfirmationState({

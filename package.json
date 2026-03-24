@@ -10,9 +10,10 @@
     "dev:electron": "cross-env NODE_ENV=development wait-on http://localhost:5178 && bun run compile:electron && electron dist-electron/main.js",
     "compile:electron": "tsc -p tsconfig.electron.json",
     "build": "vite build && bun run compile:electron",
-    "build:web": "vite build",
-    "build:electron": "bun run build && electron-builder --publish never",
-    "preview": "vite preview"
+    "prepare:desktop-icon": "node ./scripts/generate-desktop-icon.cjs",
+    "build:electron": "npm run prepare:desktop-icon && bun run build && electron-builder --publish never && node ./scripts/copy-installer.cjs",
+    "preview": "vite preview",
+    "postinstall": "electron-builder install-app-deps"
   },
   "build": {
     "appId": "com.cansat.gui",
